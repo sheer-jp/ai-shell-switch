@@ -1,0 +1,38 @@
+{
+  "requirements": {
+    "AG-001": "The menu bar always shows AI ON or AI OFF while the app is running.",
+    "AG-002": "A menu click switches between AI keep-awake mode and normal macOS sleep.",
+    "AG-003": "ON is blocked on battery and OFF restores SleepDisabled to 0.",
+    "AG-004": "The user can enable launch at login without using Terminal."
+  },
+  "success_criteria": [
+    "The app builds and launches as a menu-bar-only macOS app.",
+    "The displayed state is derived from the actual pmset SleepDisabled value.",
+    "ON requires AC power and administrator confirmation.",
+    "OFF restores normal macOS sleep behavior.",
+    "The original ai-on, ai-off, and ai-status commands remain available."
+  ],
+  "failure_conditions": [
+    "The menu display disagrees with pmset.",
+    "Battery operation can enable the mode.",
+    "SleepDisabled remains enabled after OFF.",
+    "The app appears in the Dock instead of only the menu bar."
+  ],
+  "acceptance_checks": [
+    "test.sh passes.",
+    "build.sh produces dist/AI Shell Switch.app.",
+    "The built app starts and remains running.",
+    "A live ON then OFF cycle returns SleepDisabled to 0."
+  ],
+  "evidence_required": [
+    "Build and test output.",
+    "Running app process.",
+    "Final pmset state."
+  ],
+  "done_definition": "The menu-bar app is installed and opened, its contracts pass, and the final power mode is OFF.",
+  "not_proven_boundaries": [
+    "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
+    "This does not start or supervise the AI task itself.",
+    "This does not guarantee safe thermals with blocked ventilation."
+  ]
+}

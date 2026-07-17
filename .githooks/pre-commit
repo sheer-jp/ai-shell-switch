@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+SAFE_DIR="$ROOT/.git-safety"
+BACKUP_DIR="$SAFE_DIR/backups"
+LOG_FILE="$SAFE_DIR/backup-log.tsv"
+TS="$(date '+%Y%m%d_%H%M%S')"
+PATCH_FILE="$BACKUP_DIR/${TS}_staged.patch"
+STATUS_FILE="$BACKUP_DIR/${TS}_status.txt"
+
+mkdir -p "$BACKUP_DIR"
+
+git diff --cached --binary > "$PATCH_FILE"
+git status --short > "$STATUS_FILE"
+
+PATCH_SHA="$(shasum -a 256 "$PATCH_FILE" | awk '{print $1}')"
+STATUS_SHA="$(shasum -a 256 "$STATUS_FILE" | awk '{print $1}')"
+PATCH_SIZE="$(wc -c < "$PATCH_FILE" | tr -d ' ')"
+
+echo -e "${TS}\t${PATCH_SHA}\t${PATCH_SIZE}\t${STATUS_SHA}\t$(basename "$PATCH_FILE")" >> "$LOG_FILE"
+
+echo "[git-guard] backup created: $PATCH_FILE"
