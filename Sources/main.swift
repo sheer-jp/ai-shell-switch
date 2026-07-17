@@ -545,6 +545,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 if CommandLine.arguments.contains("--install-passwordless") {
+    let commandApplication = NSApplication.shared
+    commandApplication.setActivationPolicy(.accessory)
+    commandApplication.activate(ignoringOtherApps: true)
     do {
         try PrivilegedToggleManager.install()
         print("passwordless-rule: installed")
@@ -556,6 +559,9 @@ if CommandLine.arguments.contains("--install-passwordless") {
 }
 
 if CommandLine.arguments.contains("--uninstall-passwordless") {
+    let commandApplication = NSApplication.shared
+    commandApplication.setActivationPolicy(.accessory)
+    commandApplication.activate(ignoringOtherApps: true)
     do {
         try PrivilegedToggleManager.uninstall()
         print("passwordless-rule: removed")
