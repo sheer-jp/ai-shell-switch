@@ -21,6 +21,35 @@ cd ai-shell-switch
 
 インストール後、画面上部に表示される `AI OFF` をクリックして切り替えます。初回のON操作ではmacOSの管理者確認が表示されます。
 
+## ワンタッチ切り替え
+
+メニューバーの `AI OFF` / `AI ON` をクリックし、`パスワード省略を設定…` を選びます。最初の設定時だけmacOSの管理者確認が表示されます。その後は、メニュー・ショートカット・CLIのON/OFFでパスワード入力が不要になります。
+
+全体ショートカット:
+
+```text
+Control + Option + A（⌃⌥A）
+```
+
+Caps LockはmacOSで通常の修飾キーとして扱われず、文字入力中の誤切り替えも起こりやすいため使用していません。`⌃⌥A` は追加のアクセシビリティ権限なしで利用できます。
+
+パスワード省略で許可する管理者操作は、次の2コマンドだけです。
+
+```text
+/usr/bin/pmset -a disablesleep 0
+/usr/bin/pmset -a disablesleep 1
+```
+
+メニューの `パスワード省略: 設定済み（解除…）` からいつでも解除できます。解除後は従来どおり、切り替え時に管理者確認が表示されます。
+
+管理用コマンドでも同じ設定・解除ができます。
+
+```sh
+"$HOME/Applications/AI Shell Switch.app/Contents/MacOS/AI Shell Switch" --install-passwordless
+"$HOME/Applications/AI Shell Switch.app/Contents/MacOS/AI Shell Switch" --passwordless-status
+"$HOME/Applications/AI Shell Switch.app/Contents/MacOS/AI Shell Switch" --uninstall-passwordless
+```
+
 ## 使い方
 
 1. `dist/AI Shell Switch.app` を起動します。
@@ -82,6 +111,7 @@ ai-off
 - `pmset disablesleep` の実際の挙動はMacの機種、macOS、電源、外部ディスプレイ、温度条件に左右されます。
 - このアプリはAIタスクやネットワーク接続を監視・再開しません。
 - OFF時は `SleepDisabled=0` に戻し、通常のmacOSスリープ動作を使います。
+- パスワード省略は任意です。sudoersルールがない、または利用できない場合は、従来の管理者確認へ自動的に戻ります。
 
 ## License
 

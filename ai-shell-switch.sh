@@ -18,6 +18,16 @@ notify() {
   "$OSASCRIPT" -e "display notification \"${message}\" with title \"AIクラムシェル運転\"" >/dev/null 2>&1 || true
 }
 
+set_sleep_disabled() {
+  local value=$1
+
+  if /usr/bin/sudo -n "$PMSET" -a disablesleep "$value" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  "$OSASCRIPT" -e "do shell script \"/usr/bin/pmset -a disablesleep ${value}\" with administrator privileges" >/dev/null
+}
+
 status() {
   local source
   source=$(power_source)
@@ -51,7 +61,7 @@ turn_on() {
     return 2
   fi
 
-  "$OSASCRIPT" -e 'do shell script "/usr/bin/pmset -a disablesleep 1" with administrator privileges' >/dev/null
+  set_sleep_disabled 1
 
   if ! sleep_disabled; then
     print -u2 "ONへの切り替えを確認できませんでした。"
@@ -65,7 +75,7 @@ turn_on() {
 
 turn_off() {
   if sleep_disabled; then
-    "$OSASCRIPT" -e 'do shell script "/usr/bin/pmset -a disablesleep 0" with administrator privileges' >/dev/null
+    set_sleep_disabled 0
   fi
 
   if sleep_disabled; then

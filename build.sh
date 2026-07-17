@@ -12,6 +12,7 @@ readonly MACOS_DIR="$CONTENTS_DIR/MacOS"
 /usr/bin/swiftc \
   -O \
   -framework AppKit \
+  -framework Carbon \
   -o "$MACOS_DIR/$APP_NAME" \
   "$ROOT/Sources/main.swift"
 /bin/cp -f "$ROOT/Info.plist" "$CONTENTS_DIR/Info.plist"
