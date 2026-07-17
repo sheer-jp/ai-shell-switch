@@ -3,33 +3,39 @@
     "AG-001": "The menu bar always shows AI ON or AI OFF while the app is running.",
     "AG-002": "A menu click switches between AI keep-awake mode and normal macOS sleep.",
     "AG-003": "ON is blocked on battery and OFF restores SleepDisabled to 0.",
-    "AG-004": "The user can enable launch at login without using Terminal."
+    "AG-004": "The user can enable launch at login without using Terminal.",
+    "AG-005": "The public repository includes safe setup instructions and an MIT license.",
+    "AG-006": "GitHub visibility is PUBLIC and origin/main matches the verified local commit."
   },
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
     "The displayed state is derived from the actual pmset SleepDisabled value.",
     "ON requires AC power and administrator confirmation.",
     "OFF restores normal macOS sleep behavior.",
-    "The original ai-on, ai-off, and ai-status commands remain available."
+    "The original ai-on, ai-off, and ai-status commands remain available.",
+    "A public GitHub visitor can clone, build, and understand the safety boundary from README.md."
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
     "Battery operation can enable the mode.",
     "SleepDisabled remains enabled after OFF.",
-    "The app appears in the Dock instead of only the menu bar."
+    "The app appears in the Dock instead of only the menu bar.",
+    "Trust runtime files, secrets, or generated app bundles are published."
   ],
   "acceptance_checks": [
     "test.sh passes.",
     "build.sh produces dist/AI Shell Switch.app.",
     "The built app starts and remains running.",
-    "A live ON then OFF cycle returns SleepDisabled to 0."
+    "A live ON then OFF cycle returns SleepDisabled to 0.",
+    "GitHub reports visibility PUBLIC and remote main matches local main."
   ],
   "evidence_required": [
     "Build and test output.",
     "Running app process.",
-    "Final pmset state."
+    "Final pmset state.",
+    "Public GitHub URL, visibility, and remote commit."
   ],
-  "done_definition": "The menu-bar app is installed and opened, its contracts pass, and the final power mode is OFF.",
+  "done_definition": "The menu-bar app is installed and opened, its contracts pass, OFF recovery has been verified, the current power mode is explicitly reported, and the verified source is public on GitHub.",
   "not_proven_boundaries": [
     "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
     "This does not start or supervise the AI task itself.",

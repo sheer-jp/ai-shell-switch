@@ -5,3 +5,6 @@ DerivedData/
 .git-safety/
 backups/
 *.recovery_backup_*
+_meta/agent-memory/
+_meta/live-ops/
+_meta/live-ops/data-snapshots/
