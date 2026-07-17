@@ -13,7 +13,8 @@ private struct PowerState {
 }
 
 private enum PrivilegedToggleManager {
-    static let rulePath = "/private/etc/sudoers.d/dev.arisa.ai-shell-switch"
+    static let rulePath = "/private/etc/sudoers.d/ai-shell-switch"
+    private static let legacyRulePath = "/private/etc/sudoers.d/dev.arisa.ai-shell-switch"
     private static let allowedCommands = [
         "/usr/bin/pmset -a disablesleep 0",
         "/usr/bin/pmset -a disablesleep 1"
@@ -50,11 +51,13 @@ private enum PrivilegedToggleManager {
 
         let temp = shellQuoted(temporaryURL.path)
         let destination = shellQuoted(rulePath)
+        let legacyDestination = shellQuoted(legacyRulePath)
         let command = [
             "/usr/bin/grep -Eq '^[[:space:]]*(#|@)includedir[[:space:]]+(/private)?/etc/sudoers.d' /etc/sudoers",
             "/usr/sbin/visudo -cf \(temp)",
             "/bin/mkdir -p /private/etc/sudoers.d",
             "/usr/bin/install -o root -g wheel -m 0440 \(temp) \(destination)",
+            "/bin/rm -f \(legacyDestination)",
             "/usr/sbin/visudo -cf /etc/sudoers"
         ].joined(separator: " && ")
         try runAsAdministrator(command)
@@ -62,7 +65,8 @@ private enum PrivilegedToggleManager {
 
     static func uninstall() throws {
         let destination = shellQuoted(rulePath)
-        try runAsAdministrator("/bin/rm -f \(destination) && /usr/sbin/visudo -cf /etc/sudoers")
+        let legacyDestination = shellQuoted(legacyRulePath)
+        try runAsAdministrator("/bin/rm -f \(destination) \(legacyDestination) && /usr/sbin/visudo -cf /etc/sudoers")
     }
 
     private static func runAsAdministrator(_ command: String) throws {
