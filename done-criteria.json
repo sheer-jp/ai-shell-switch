@@ -11,7 +11,8 @@
     "AG-009": "Removing the rule restores the administrator-confirmation fallback.",
     "AG-010": "The normal installed surface contains only one AI Shell Switch app bundle.",
     "AG-011": "One installed CLI implements on, off, toggle, status, setup, unsetup, and doctor.",
-    "AG-012": "Build artifacts stay under hidden .build and the installer exposes stable short commands."
+    "AG-012": "Build artifacts stay under hidden .build and the installer exposes stable short commands.",
+    "AG-013": "The public source includes a recognizable 1024px app icon and every built app contains a valid AppIcon.icns."
   },
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
@@ -20,7 +21,8 @@
     "Only two exact pmset commands are permitted by optional passwordless mode.",
     "ai-shell-switch and all documented short commands resolve to the bundled CLI.",
     "CLI transition tests use mocks and never mutate the host power state.",
-    "A public GitHub visitor can clone, install, diagnose, and understand the safety boundary."
+    "A public GitHub visitor can clone, install, diagnose, and understand the safety boundary.",
+    "Finder, Applications, and Spotlight can identify the app from its bundled icon."
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
@@ -30,7 +32,8 @@
     "A normal build recreates a visible dist app duplicate.",
     "Any short command points to mutable repository source instead of the installed app resource.",
     "The sudoers rule permits any command beyond the two exact pmset toggles.",
-    "Trust runtime files, secrets, or generated app bundles are published."
+    "Trust runtime files, secrets, or generated app bundles are published.",
+    "The icon source is missing, malformed, or not represented by AppIcon.icns in the app bundle."
   ],
   "acceptance_checks": [
     "test.sh passes ShellCheck, shfmt, Swift typecheck, mocked transition, plist, and contract checks.",
@@ -39,16 +42,18 @@
     "ai-status and ai-doctor pass against the installed app.",
     "The final live SleepDisabled value equals the value observed before maintenance.",
     "visudo validates the exact installed rule when passwordless mode is configured.",
-    "GitHub reports PUBLIC visibility and remote main matches local main."
+    "GitHub reports PUBLIC visibility and remote main matches local main.",
+    "Assets/AppIcon.png is a 1024x1024 alpha PNG and the signed app contains every standard macOS icon representation."
   ],
   "evidence_required": [
     "App-bundle discovery before and after cleanup.",
     "Shell lint, formatting, build, and test output.",
     "Installed command resolution and doctor output.",
     "Running app process and final pmset state.",
-    "Public GitHub URL, visibility, and remote commit."
+    "Public GitHub URL, visibility, and remote commit.",
+    "Source icon dimensions, AppIcon.icns representations, and installed bundle icon metadata."
   ],
-  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
+  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app has its official icon, the app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
   "not_proven_boundaries": [
     "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
     "This does not start or supervise the AI task itself.",
