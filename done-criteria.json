@@ -8,42 +8,47 @@
     "AG-006": "GitHub visibility is PUBLIC and origin/main matches the verified local commit.",
     "AG-007": "A one-time setup allows passwordless toggling using only two exact pmset commands.",
     "AG-008": "Control+Option+A toggles the mode globally without Accessibility permission.",
-    "AG-009": "Removing the rule restores the administrator-confirmation fallback."
+    "AG-009": "Removing the rule restores the administrator-confirmation fallback.",
+    "AG-010": "The normal installed surface contains only one AI Shell Switch app bundle.",
+    "AG-011": "One installed CLI implements on, off, toggle, status, setup, unsetup, and doctor.",
+    "AG-012": "Build artifacts stay under hidden .build and the installer exposes stable short commands."
   },
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
     "The displayed state is derived from the actual pmset SleepDisabled value.",
-    "ON requires AC power and administrator confirmation.",
-    "OFF restores normal macOS sleep behavior.",
-    "The original ai-on, ai-off, and ai-status commands remain available.",
-    "A public GitHub visitor can clone, build, and understand the safety boundary from README.md.",
-    "Passwordless mode grants only exact disablesleep 0 and 1 commands and can be removed."
+    "ON requires AC power and administrator authorization; OFF restores normal sleep.",
+    "Only two exact pmset commands are permitted by optional passwordless mode.",
+    "ai-shell-switch and all documented short commands resolve to the bundled CLI.",
+    "CLI transition tests use mocks and never mutate the host power state.",
+    "A public GitHub visitor can clone, install, diagnose, and understand the safety boundary."
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
     "Battery operation can enable the mode.",
-    "SleepDisabled remains enabled after OFF.",
+    "SleepDisabled differs from its initial value after verification.",
     "The app appears in the Dock instead of only the menu bar.",
-    "Trust runtime files, secrets, or generated app bundles are published.",
+    "A normal build recreates a visible dist app duplicate.",
+    "Any short command points to mutable repository source instead of the installed app resource.",
     "The sudoers rule permits any command beyond the two exact pmset toggles.",
-    "The hotkey bypasses the AC-power guard."
+    "Trust runtime files, secrets, or generated app bundles are published."
   ],
   "acceptance_checks": [
-    "test.sh passes.",
-    "build.sh produces dist/AI Shell Switch.app.",
-    "The built app starts and remains running.",
-    "A live ON then OFF cycle returns SleepDisabled to 0.",
-    "GitHub reports visibility PUBLIC and remote main matches local main.",
-    "visudo validates the installed rule and sudo -n toggles without a prompt.",
-    "Removing the rule makes sudo -n unavailable while the administrator fallback remains."
+    "test.sh passes ShellCheck, shfmt, Swift typecheck, mocked transition, plist, and contract checks.",
+    "build.sh produces .build/AI Shell Switch.app with the bundled CLI resource.",
+    "install.sh leaves one normal app at ~/Applications/AI Shell Switch.app and installs short commands.",
+    "ai-status and ai-doctor pass against the installed app.",
+    "The final live SleepDisabled value equals the value observed before maintenance.",
+    "visudo validates the exact installed rule when passwordless mode is configured.",
+    "GitHub reports PUBLIC visibility and remote main matches local main."
   ],
   "evidence_required": [
-    "Build and test output.",
-    "Running app process.",
-    "Final pmset state.",
+    "App-bundle discovery before and after cleanup.",
+    "Shell lint, formatting, build, and test output.",
+    "Installed command resolution and doctor output.",
+    "Running app process and final pmset state.",
     "Public GitHub URL, visibility, and remote commit."
   ],
-  "done_definition": "The menu-bar app is installed and opened, its contracts pass, OFF recovery has been verified, the current power mode is explicitly reported, and the verified source is public on GitHub.",
+  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
   "not_proven_boundaries": [
     "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
     "This does not start or supervise the AI task itself.",
