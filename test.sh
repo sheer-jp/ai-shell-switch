@@ -44,6 +44,20 @@ done
 /usr/bin/plutil -lint "$ROOT/Info.plist" >/dev/null
 "$JQ_BIN" -e . "$ROOT/done-criteria.json" >/dev/null
 
+icon_width=$(/usr/bin/sips -g pixelWidth "$ROOT/Assets/AppIcon.png" 2>/dev/null | /usr/bin/awk '$1 == "pixelWidth:" { print $2; exit }')
+icon_height=$(/usr/bin/sips -g pixelHeight "$ROOT/Assets/AppIcon.png" 2>/dev/null | /usr/bin/awk '$1 == "pixelHeight:" { print $2; exit }')
+icon_alpha=$(/usr/bin/sips -g hasAlpha "$ROOT/Assets/AppIcon.png" 2>/dev/null | /usr/bin/awk '$1 == "hasAlpha:" { print $2; exit }')
+if [ "$icon_width" != "1024" ] || [ "$icon_height" != "1024" ] || [ "$icon_alpha" != "yes" ]; then
+  printf 'AppIcon source must be a 1024x1024 PNG with alpha\n' >&2
+  exit 1
+fi
+
+plist_icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$ROOT/Info.plist")
+if [ "$plist_icon" != "AppIcon.icns" ]; then
+  printf 'CFBundleIconFile must point to AppIcon.icns\n' >&2
+  exit 1
+fi
+
 state_file="$temp_dir/sleep-disabled"
 rule_file="$temp_dir/passwordless-rule"
 bin_dir="$temp_dir/bin"
@@ -137,7 +151,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.2.0"*) ;;
+  *"1.2.1"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -191,4 +205,31 @@ if ! /usr/bin/grep -q '/.build' "$ROOT/build.sh"; then
   exit 1
 fi
 
-printf 'PASS: shell lint, mocked transitions, menu app, plist, and CLI contracts\n'
+test_build_dir="$temp_dir/build"
+AI_SHELL_SWITCH_BUILD_DIR="$test_build_dir" "$ROOT/build.sh" >/dev/null
+built_app="$test_build_dir/AI Shell Switch.app"
+built_icon="$built_app/Contents/Resources/AppIcon.icns"
+if [ ! -f "$built_icon" ]; then
+  printf 'built app is missing AppIcon.icns\n' >&2
+  exit 1
+fi
+/usr/bin/codesign --verify --deep --strict "$built_app"
+/usr/bin/iconutil -c iconset "$built_icon" -o "$temp_dir/verified.iconset"
+for icon_file in \
+  icon_16x16.png \
+  icon_16x16@2x.png \
+  icon_32x32.png \
+  icon_32x32@2x.png \
+  icon_128x128.png \
+  icon_128x128@2x.png \
+  icon_256x256.png \
+  icon_256x256@2x.png \
+  icon_512x512.png \
+  icon_512x512@2x.png; do
+  if [ ! -f "$temp_dir/verified.iconset/$icon_file" ]; then
+    printf 'generated icns is missing representation: %s\n' "$icon_file" >&2
+    exit 1
+  fi
+done
+
+printf 'PASS: shell lint, mocked transitions, menu app, icon bundle, plist, and CLI contracts\n'

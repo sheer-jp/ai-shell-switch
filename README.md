@@ -1,5 +1,9 @@
 # AI Shell Switch
 
+<p align="center">
+  <img src="Assets/AppIcon.png" alt="AI Shell Switch app icon" width="160">
+</p>
+
 MacBookの蓋を閉じている間もローカルAI処理を継続させるための、macOSメニューバーアプリとCLIです。
 
 > [!CAUTION]
@@ -97,7 +101,7 @@ ai-doctor
 ./build.sh
 ```
 
-`build.sh` は `.build/AI Shell Switch.app` を生成し、アプリ内の `Contents/Resources/ai-shell-switch` にCLIを同梱します。`test.sh` はShellCheck、shfmt、Swift typecheck、モック化したON/OFF・ACガード・権限設定、plist、sudoers契約を検証します。テストは実機の電源設定を変更しません。
+`build.sh` は `Assets/AppIcon.png` からmacOS標準の `sips` と `iconutil` で `AppIcon.icns` を生成し、`.build/AI Shell Switch.app` を構築します。アプリ内の `Contents/Resources/ai-shell-switch` にはCLIも同梱します。`test.sh` はShellCheck、shfmt、Swift typecheck、モック化したON/OFF・ACガード・権限設定、アイコンの全サイズ、plist、署名、sudoers契約を検証します。テストは実機の電源設定を変更しません。
 
 テストを実行する開発環境では `shellcheck`、`shfmt`、`jq` も必要です。
 
