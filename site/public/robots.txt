@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ai-shell-switch.bonahja.chatgpt.site/sitemap.xml

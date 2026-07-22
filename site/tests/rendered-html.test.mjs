@@ -61,13 +61,12 @@ test("server-renders the finished Japanese distribution page", async () => {
 });
 
 test("publishes robots and sitemap metadata routes", async () => {
-  const [robotsResponse, sitemapResponse] = await Promise.all([
-    render("/robots.txt"),
+  const [robots, sitemapResponse] = await Promise.all([
+    readFile(new URL("../public/robots.txt", import.meta.url), "utf8"),
     render("/sitemap.xml"),
   ]);
 
-  assert.equal(robotsResponse.status, 200);
-  assert.match(await robotsResponse.text(), /Sitemap: https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site\/sitemap\.xml/);
+  assert.match(robots, /Sitemap: https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site\/sitemap\.xml/);
   assert.equal(sitemapResponse.status, 200);
   assert.match(await sitemapResponse.text(), /https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site/);
 });
