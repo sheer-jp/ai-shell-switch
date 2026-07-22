@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://ai-shell-switch.bonahja.chatgpt.site";
+
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host =
@@ -26,8 +28,12 @@ export async function generateMetadata(): Promise<Metadata> {
     "必要なときだけMacのスリープを止め、終わったらすぐ元へ戻す。ローカルAI作業のためのオープンソースmacOSユーティリティ。";
 
   return {
+    metadataBase: new URL(siteUrl),
     title,
     description,
+    alternates: {
+      canonical: siteUrl,
+    },
     icons: {
       icon: "/app-icon.png",
       shortcut: "/app-icon.png",
