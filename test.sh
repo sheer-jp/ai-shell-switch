@@ -6,6 +6,7 @@ ROOT=$(cd "$(/usr/bin/dirname "$0")" && /bin/pwd -P)
 readonly ROOT
 readonly SWITCH="$ROOT/ai-shell-switch.sh"
 readonly FIXTURES="$ROOT/tests/fixtures"
+SOURCE_FILES=("$ROOT"/Sources/*.swift)
 SHELLCHECK_BIN=$(command -v shellcheck || true)
 readonly SHELLCHECK_BIN
 SHFMT_BIN=$(command -v shfmt || true)
@@ -40,9 +41,10 @@ done
 
 "$SHELLCHECK_BIN" "${scripts[@]}"
 "$SHFMT_BIN" -d -i 2 -ci "${scripts[@]}"
-/usr/bin/swiftc -typecheck -module-cache-path "$temp_dir/module-cache" -framework AppKit -framework Carbon "$ROOT/Sources/main.swift"
+/usr/bin/swiftc -typecheck -module-cache-path "$temp_dir/module-cache" -framework AppKit -framework Carbon "${SOURCE_FILES[@]}"
 /usr/bin/plutil -lint "$ROOT/Info.plist" >/dev/null
 "$JQ_BIN" -e . "$ROOT/done-criteria.json" >/dev/null
+"$JQ_BIN" -e . "$ROOT/trust/tech-decision.json" "$ROOT/trust/roadmap.json" >/dev/null
 
 icon_width=$(/usr/bin/sips -g pixelWidth "$ROOT/Assets/AppIcon.png" 2>/dev/null | /usr/bin/awk '$1 == "pixelWidth:" { print $2; exit }')
 icon_height=$(/usr/bin/sips -g pixelHeight "$ROOT/Assets/AppIcon.png" 2>/dev/null | /usr/bin/awk '$1 == "pixelHeight:" { print $2; exit }')
@@ -151,7 +153,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.2.1"*) ;;
+  *"1.3.0"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -172,25 +174,44 @@ fi
 for contract_text in \
   "AI ON" \
   "AI OFF" \
+  "操作画面を開く…" \
   "通常スリープに戻す（OFF）" \
   "AI稼働モードにする（ON）" \
-  "ショートカット: ⌃⌥A" \
+  "applicationShouldHandleReopen" \
+  "showControlWindow" \
+  'CommandLine.arguments.contains("--background")' \
+  "ショートカット: ⌃⌥A（画面 / 緊急OFF）" \
+  "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
   "/usr/bin/pmset -a disablesleep 1"; do
-  if ! /usr/bin/grep -q "$contract_text" "$ROOT/Sources/main.swift"; then
+  if ! /usr/bin/grep -q "$contract_text" "${SOURCE_FILES[@]}"; then
     printf 'menu contract missing: %s\n' "$contract_text" >&2
     exit 1
   fi
 done
 
-rule_command_count=$(/usr/bin/grep -Ec '^[[:space:]]*"/usr/bin/pmset -a disablesleep [01]"' "$ROOT/Sources/main.swift")
+shortcut_handler=$(/usr/bin/sed -n '/private func handleGlobalHotKey()/,/^    }/p' "$ROOT/Sources/AppDelegate.swift")
+case "$shortcut_handler" in
+  *"case .on:"*"toggleMode()"*"case .off:"*"showControlWindow()"*) ;;
+  *)
+    printf 'global shortcut must open controls from OFF and may only toggle directly from ON\n' >&2
+    exit 1
+    ;;
+esac
+
+if ! /usr/bin/grep -q '\["/usr/bin/open", "-gj", Bundle.main.bundlePath, "--args", "--background"\]' "${SOURCE_FILES[@]}"; then
+  printf 'login launch must stay in the background while manual app launches show controls\n' >&2
+  exit 1
+fi
+
+rule_command_count=$(/usr/bin/grep -Eh '^[[:space:]]*"/usr/bin/pmset -a disablesleep [01]"' "${SOURCE_FILES[@]}" | /usr/bin/wc -l | /usr/bin/tr -d ' ')
 if [ "$rule_command_count" -ne 2 ]; then
   printf 'sudoers contract must contain exactly two pmset commands\n' >&2
   exit 1
 fi
 
-if /usr/bin/grep -Eq 'NOPASSWD:[[:space:]]*(ALL|/bin/|/usr/bin/[^p])' "$ROOT/Sources/main.swift"; then
+if /usr/bin/grep -Eq 'NOPASSWD:[[:space:]]*(ALL|/bin/|/usr/bin/[^p])' "${SOURCE_FILES[@]}"; then
   printf 'sudoers contract is broader than the two pmset commands\n' >&2
   exit 1
 fi

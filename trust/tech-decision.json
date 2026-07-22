@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "project_type": "native macOS menu bar utility",
+  "users": {
+    "internal_or_public": "public",
+    "expected_users": "macOS users who run local AI tasks while the lid is closed"
+  },
+  "data": {
+    "has_personal_data": false
+  },
+  "requirements": {
+    "auth": "No account auth; local admin approval is limited to two explicit pmset commands"
+  },
+  "constraints": {
+    "budget_monthly_jpy": 0,
+    "deadline": "same-session maintenance release",
+    "maintainer_skill": "Swift, AppKit, and POSIX shell"
+  },
+  "candidate_stack": {
+    "languages": ["Swift", "Objective-C"],
+    "frontend": ["AppKit", "SwiftUI"],
+    "backend": ["none", "local Process and AppleScript bridges"],
+    "hosting": ["local macOS app bundle", "GitHub source distribution"]
+  },
+  "decision": {
+    "selected": {
+      "language": "Swift",
+      "frontend": "AppKit",
+      "backend": "local Process and AppleScript bridges",
+      "hosting": "local macOS app bundle distributed through GitHub"
+    },
+    "reason": "The existing dependency-free AppKit app already owns the menu bar, hot key, and pmset safety boundary; extending it keeps installation and maintenance small.",
+    "rejected_options": [
+      "SwiftUI: unnecessary lifecycle migration for one compact control window",
+      "Electron: excessive runtime and distribution weight for a local power switch",
+      "Objective-C rewrite: no user benefit and higher regression risk"
+    ]
+  },
+  "documentation": {
+    "human_markdown_root": ".",
+    "machine_readable_root": "trust",
+    "machine_contract_files": [
+      "trust/tech-decision.json",
+      "trust/roadmap.json",
+      "done-criteria.json"
+    ]
+  }
+}

@@ -13,6 +13,7 @@ readonly RESOURCES_DIR="$CONTENTS_DIR/Resources"
 readonly MODULE_CACHE_DIR="$BUILD_DIR/ModuleCache"
 readonly ICON_SOURCE="$ROOT/Assets/AppIcon.png"
 readonly ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
+SOURCE_FILES=("$ROOT"/Sources/*.swift)
 
 icon_source_dimension() {
   local property=$1
@@ -59,7 +60,7 @@ generate_icon_png 1024 icon_512x512@2x.png
   -framework AppKit \
   -framework Carbon \
   -o "$MACOS_DIR/$APP_NAME" \
-  "$ROOT/Sources/main.swift"
+  "${SOURCE_FILES[@]}"
 /bin/cp -f "$ROOT/Info.plist" "$CONTENTS_DIR/Info.plist"
 /usr/bin/install -m 0755 "$ROOT/ai-shell-switch.sh" "$RESOURCES_DIR/ai-shell-switch"
 /usr/bin/plutil -lint "$CONTENTS_DIR/Info.plist"

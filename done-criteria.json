@@ -7,12 +7,14 @@
     "AG-005": "The public repository includes safe setup instructions and an MIT license.",
     "AG-006": "GitHub visibility is PUBLIC and origin/main matches the verified local commit.",
     "AG-007": "A one-time setup allows passwordless toggling using only two exact pmset commands.",
-    "AG-008": "Control+Option+A toggles the mode globally without Accessibility permission.",
+    "AG-008": "Control+Option+A opens controls from OFF and immediately returns ON to OFF without Accessibility permission.",
     "AG-009": "Removing the rule restores the administrator-confirmation fallback.",
     "AG-010": "The normal installed surface contains only one AI Shell Switch app bundle.",
     "AG-011": "One installed CLI implements on, off, toggle, status, setup, unsetup, and doctor.",
     "AG-012": "Build artifacts stay under hidden .build and the installer exposes stable short commands.",
-    "AG-013": "The public source includes a recognizable 1024px app icon and every built app contains a valid AppIcon.icns."
+    "AG-013": "The public source includes a recognizable 1024px app icon and every built app contains a valid AppIcon.icns.",
+    "AG-014": "Manual launch of a stopped app opens one control window without changing the current power mode.",
+    "AG-015": "Reopening a running app brings the same control window forward while login launch stays background-only."
   },
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
@@ -22,7 +24,8 @@
     "ai-shell-switch and all documented short commands resolve to the bundled CLI.",
     "CLI transition tests use mocks and never mutate the host power state.",
     "A public GitHub visitor can clone, install, diagnose, and understand the safety boundary.",
-    "Finder, Applications, and Spotlight can identify the app from its bundled icon."
+    "Finder, Applications, and Spotlight can identify the app from its bundled icon.",
+    "A manual app-icon launch or reopen always exposes the current status and controls."
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
@@ -33,7 +36,10 @@
     "Any short command points to mutable repository source instead of the installed app resource.",
     "The sudoers rule permits any command beyond the two exact pmset toggles.",
     "Trust runtime files, secrets, or generated app bundles are published.",
-    "The icon source is missing, malformed, or not represented by AppIcon.icns in the app bundle."
+    "The icon source is missing, malformed, or not represented by AppIcon.icns in the app bundle.",
+    "The app icon launches a process but leaves the user with no visible control window.",
+    "Opening or reopening the control window changes SleepDisabled without an explicit toggle action.",
+    "The global shortcut can enable AI mode from OFF without a visible button click."
   ],
   "acceptance_checks": [
     "test.sh passes ShellCheck, shfmt, Swift typecheck, mocked transition, plist, and contract checks.",
@@ -43,7 +49,9 @@
     "The final live SleepDisabled value equals the value observed before maintenance.",
     "visudo validates the exact installed rule when passwordless mode is configured.",
     "GitHub reports PUBLIC visibility and remote main matches local main.",
-    "Assets/AppIcon.png is a 1024x1024 alpha PNG and the signed app contains every standard macOS icon representation."
+    "Assets/AppIcon.png is a 1024x1024 alpha PNG and the signed app contains every standard macOS icon representation.",
+    "After terminating the resident process, opening the app creates one process and one visible control window.",
+    "Opening the already-running app raises the existing window and preserves the observed SleepDisabled value."
   ],
   "evidence_required": [
     "App-bundle discovery before and after cleanup.",
@@ -51,9 +59,10 @@
     "Installed command resolution and doctor output.",
     "Running app process and final pmset state.",
     "Public GitHub URL, visibility, and remote commit.",
-    "Source icon dimensions, AppIcon.icns representations, and installed bundle icon metadata."
+    "Source icon dimensions, AppIcon.icns representations, and installed bundle icon metadata.",
+    "Accessibility or window-list evidence for stopped-app launch and running-app reopen."
   ],
-  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app has its official icon, the app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
+  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app has its official icon, manual launch and reopen expose one control window, the app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
   "not_proven_boundaries": [
     "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
     "This does not start or supervise the AI task itself.",
