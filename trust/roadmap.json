@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "project_id": "ai-shell-switch",
-  "roadmap_version": "1.3.0",
-  "current_phase": "fix",
+  "roadmap_version": "1.4.0",
+  "current_phase": "release",
   "milestones": [
     {
       "id": "M-1",
@@ -11,6 +11,10 @@
     {
       "id": "M-2",
       "title": "Verified local and public maintenance release"
+    },
+    {
+      "id": "M-3",
+      "title": "Public source distribution landing page"
     }
   ],
   "tasks": [
@@ -76,7 +80,7 @@
       "id": "REL-001",
       "title": "Replace the installed old bundle and publish through main",
       "type": "release",
-      "status": "in_progress",
+      "status": "done",
       "owner_pod": "release operations",
       "acceptance": ["Only one installed app bundle remains", "Public GitHub main contains the verified change"],
       "done_definition": "Installed and public canonical versions match the merged commit",
@@ -84,6 +88,36 @@
       "evidence_required": ["bundle inventory", "git SHA", "GitHub PR and main checks"],
       "not_proven_boundaries": ["Third-party package-manager distribution"],
       "depends_on": ["QA-001"]
+    },
+    {
+      "id": "WEB-001",
+      "title": "Build and verify the Japanese distribution landing page",
+      "type": "feature",
+      "status": "done",
+      "owner_pod": "web implementation and QA",
+      "acceptance": [
+        "The page links to the public GitHub repository and main source ZIP",
+        "Apple Silicon, macOS 13+, source-only distribution, and clamshell boundaries are explicit",
+        "Build, rendered HTML tests, lint, and production dependency audit pass"
+      ],
+      "done_definition": "Validated LP source and social card are committed with the app repository",
+      "failure_conditions": ["Broken source link", "Unqualified notarization claim", "Failed production build"],
+      "evidence_required": ["npm test", "npm run lint", "npm audit --omit=dev"],
+      "not_proven_boundaries": ["Clamshell behavior on every Mac model"],
+      "depends_on": ["REL-001"]
+    },
+    {
+      "id": "REL-002",
+      "title": "Publish the distribution site and link it from GitHub",
+      "type": "release",
+      "status": "in_progress",
+      "owner_pod": "release operations",
+      "acceptance": ["The site is publicly reachable", "GitHub main contains the exact published LP source"],
+      "done_definition": "Public URL and GitHub source are live",
+      "failure_conditions": ["Private-only access", "Deployment failure", "Source mismatch"],
+      "evidence_required": ["production URL", "deployment success", "public main SHA"],
+      "not_proven_boundaries": ["Custom domain availability"],
+      "depends_on": ["WEB-001"]
     }
   ]
 }
