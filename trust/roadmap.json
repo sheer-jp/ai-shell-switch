@@ -110,7 +110,7 @@
       "id": "REL-002",
       "title": "Publish the distribution site and link it from GitHub",
       "type": "release",
-      "status": "in_progress",
+      "status": "done",
       "owner_pod": "release operations",
       "acceptance": ["The site is publicly reachable", "GitHub main contains the exact published LP source"],
       "done_definition": "Public URL and GitHub source are live",
