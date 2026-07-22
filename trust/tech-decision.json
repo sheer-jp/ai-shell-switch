@@ -36,6 +36,13 @@
       "Objective-C rewrite: no user benefit and higher regression risk"
     ]
   },
+  "distribution_site": {
+    "language": "TypeScript",
+    "frontend": "Vinext with React",
+    "hosting": "Sites public deployment",
+    "source_flow": "GitHub main source ZIP or git clone; local macOS build",
+    "binary_boundary": "No Developer ID signed or notarized prebuilt binary is advertised"
+  },
   "documentation": {
     "human_markdown_root": ".",
     "machine_readable_root": "trust",

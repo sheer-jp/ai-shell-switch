@@ -14,7 +14,9 @@
     "AG-012": "Build artifacts stay under hidden .build and the installer exposes stable short commands.",
     "AG-013": "The public source includes a recognizable 1024px app icon and every built app contains a valid AppIcon.icns.",
     "AG-014": "Manual launch of a stopped app opens one control window without changing the current power mode.",
-    "AG-015": "Reopening a running app brings the same control window forward while login launch stays background-only."
+    "AG-015": "Reopening a running app brings the same control window forward while login launch stays background-only.",
+    "AG-016": "A public Japanese landing page links directly to the GitHub source archive and repository.",
+    "AG-017": "The landing page states Apple Silicon and macOS 13+ compatibility without promising a notarized binary or universal clamshell behavior."
   },
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
@@ -25,7 +27,8 @@
     "CLI transition tests use mocks and never mutate the host power state.",
     "A public GitHub visitor can clone, install, diagnose, and understand the safety boundary.",
     "Finder, Applications, and Spotlight can identify the app from its bundled icon.",
-    "A manual app-icon launch or reopen always exposes the current status and controls."
+    "A manual app-icon launch or reopen always exposes the current status and controls.",
+    "The public landing page can be server-rendered, downloaded from GitHub, and understood without a terminal-first explanation."
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
@@ -39,7 +42,8 @@
     "The icon source is missing, malformed, or not represented by AppIcon.icns in the app bundle.",
     "The app icon launches a process but leaves the user with no visible control window.",
     "Opening or reopening the control window changes SleepDisabled without an explicit toggle action.",
-    "The global shortcut can enable AI mode from OFF without a visible button click."
+    "The global shortcut can enable AI mode from OFF without a visible button click.",
+    "The landing page offers an unsigned prebuilt app as if it were Developer ID signed and notarized."
   ],
   "acceptance_checks": [
     "test.sh passes ShellCheck, shfmt, Swift typecheck, mocked transition, plist, and contract checks.",
@@ -51,7 +55,8 @@
     "GitHub reports PUBLIC visibility and remote main matches local main.",
     "Assets/AppIcon.png is a 1024x1024 alpha PNG and the signed app contains every standard macOS icon representation.",
     "After terminating the resident process, opening the app creates one process and one visible control window.",
-    "Opening the already-running app raises the existing window and preserves the observed SleepDisabled value."
+    "Opening the already-running app raises the existing window and preserves the observed SleepDisabled value.",
+    "The landing page production build, rendered HTML contract, lint, and production dependency audit pass."
   ],
   "evidence_required": [
     "App-bundle discovery before and after cleanup.",
@@ -60,9 +65,10 @@
     "Running app process and final pmset state.",
     "Public GitHub URL, visibility, and remote commit.",
     "Source icon dimensions, AppIcon.icns representations, and installed bundle icon metadata.",
-    "Accessibility or window-list evidence for stopped-app launch and running-app reopen."
+    "Accessibility or window-list evidence for stopped-app launch and running-app reopen.",
+    "Public landing page URL and validated GitHub source-download links."
   ],
-  "done_definition": "Duplicate app bundles are removed from normal discovery, the installed app has its official icon, manual launch and reopen expose one control window, the app and CLI are verified, the initial power state is preserved, and the tested source is merged and published from main.",
+  "done_definition": "The app, CLI, and public source distribution page are tested, merged, and published from main; users can reach GitHub downloads while the source-only and hardware-dependent boundaries remain explicit.",
   "not_proven_boundaries": [
     "macOS clamshell behavior can still depend on model, OS policy, power, display, and thermal conditions.",
     "This does not start or supervise the AI task itself.",
