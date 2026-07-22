@@ -4,13 +4,13 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("https://ai-shell-switch.example/", {
+    new Request(`https://ai-shell-switch.example${path}`, {
       headers: {
         accept: "text/html",
         host: "ai-shell-switch.example",
@@ -53,7 +53,23 @@ test("server-renders the finished Japanese distribution page", async () => {
     /https:\/\/github\.com\/sheer-jp\/ai-shell-switch/,
   );
   assert.match(html, /https:\/\/ai-shell-switch\.example\/og\.png/);
+  assert.match(
+    html,
+    /<link[^>]+rel="canonical"[^>]+href="https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site"/i,
+  );
   assert.doesNotMatch(html, /Starter Project|codex-preview|SkeletonPreview/);
+});
+
+test("publishes robots and sitemap metadata routes", async () => {
+  const [robotsResponse, sitemapResponse] = await Promise.all([
+    render("/robots.txt"),
+    render("/sitemap.xml"),
+  ]);
+
+  assert.equal(robotsResponse.status, 200);
+  assert.match(await robotsResponse.text(), /Sitemap: https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site\/sitemap\.xml/);
+  assert.equal(sitemapResponse.status, 200);
+  assert.match(await sitemapResponse.text(), /https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site/);
 });
 
 test("keeps distribution assets and source contracts explicit", async () => {
@@ -71,6 +87,7 @@ test("keeps distribution assets and source contracts explicit", async () => {
   assert.match(page, /\.\/install\.sh/);
   assert.match(page, /Developer IDで署名・公証された完成済みアプリではありません/);
   assert.match(layout, /generateMetadata/);
+  assert.match(layout, /metadataBase/);
   assert.match(layout, /lang="ja"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
