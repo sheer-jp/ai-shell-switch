@@ -58,7 +58,7 @@ test("server-renders the finished Japanese distribution page", async () => {
   assert.match(html, /https:\/\/ai-shell-switch\.example\/og\.png/);
   assert.match(
     html,
-    /<link[^>]+rel="canonical"[^>]+href="https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site"/i,
+    /<link[^>]+rel="canonical"[^>]+href="https:\/\/trustdrivensystem\.com\/labs\/ai-shell-switch\/"/i,
   );
   assert.doesNotMatch(html, /Starter Project|codex-preview|SkeletonPreview/);
 });
@@ -69,9 +69,9 @@ test("publishes robots and sitemap metadata routes", async () => {
     render("/sitemap.xml"),
   ]);
 
-  assert.match(robots, /Sitemap: https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site\/sitemap\.xml/);
+  assert.match(robots, /Sitemap: https:\/\/trustdrivensystem\.com\/labs\/ai-shell-switch\/sitemap\.xml/);
   assert.equal(sitemapResponse.status, 200);
-  assert.match(await sitemapResponse.text(), /https:\/\/ai-shell-switch\.bonahja\.chatgpt\.site/);
+  assert.match(await sitemapResponse.text(), /https:\/\/trustdrivensystem\.com\/labs\/ai-shell-switch\//);
 });
 
 test("keeps distribution assets and source contracts explicit", async () => {

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://ai-shell-switch.bonahja.chatgpt.site";
+const siteUrl = "https://trustdrivensystem.com/labs/ai-shell-switch/";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

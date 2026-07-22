@@ -6,7 +6,7 @@
 
 MacBookの蓋を閉じている間もローカルAI処理を継続させるための、macOSメニューバーアプリとCLIです。
 
-**配布ページ:** [AI Shell Switchをダウンロード](https://ai-shell-switch.bonahja.chatgpt.site)
+**配布ページ:** [AI Shell Switchをダウンロード](https://trustdrivensystem.com/labs/ai-shell-switch/)
 
 **ソースコード:** [sheer-jp/ai-shell-switch](https://github.com/sheer-jp/ai-shell-switch)
 

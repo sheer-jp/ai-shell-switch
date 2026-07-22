@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = "https://ai-shell-switch.bonahja.chatgpt.site";
+const siteUrl = "https://trustdrivensystem.com/labs/ai-shell-switch/";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
