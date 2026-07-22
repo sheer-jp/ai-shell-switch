@@ -38,12 +38,15 @@ test("server-renders the finished Japanese distribution page", async () => {
   const html = await response.text();
   assert.match(html, /<html[^>]+lang="ja"/i);
   assert.match(html, /AI Shell Switch/);
-  assert.match(html, /Macを閉じても/);
+  assert.match(html, /AIの実行環境を/);
+  assert.match(html, /THE AI UPTIME LAYER FOR macOS/);
+  assert.match(html, /PRODUCT INTELLIGENCE/);
+  assert.match(html, /ONE CONTROL PLANE/);
   assert.match(html, /ソースZIPをダウンロード/);
   assert.match(html, /Apple Silicon/);
   assert.match(html, /macOS 13\+/);
   assert.match(html, /Xcode Command Line Tools/);
-  assert.match(html, /現在は、ソース配布です/);
+  assert.match(html, /Source distribution notice/);
   assert.match(
     html,
     /https:\/\/github\.com\/sheer-jp\/ai-shell-switch\/archive\/refs\/heads\/main\.zip/,
