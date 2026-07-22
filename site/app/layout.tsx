@@ -23,9 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = host
     ? `${protocol}://${host}`
     : "https://github.com/sheer-jp/ai-shell-switch";
-  const title = "AI Shell Switch — Macを閉じても、AIの作業を止めない";
+  const title = "AI Shell Switch — AIの実行環境を、止めない";
   const description =
-    "必要なときだけMacのスリープを止め、終わったらすぐ元へ戻す。ローカルAI作業のためのオープンソースmacOSユーティリティ。";
+    "Macのスリープ状態を、AIワークロードのために安全にコントロール。ローカルAIの長時間処理を支える、オープンソースのAI uptime layer。";
 
   return {
     metadataBase: new URL(siteUrl),
@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: `${origin}/og.png`,
           width: 1200,
           height: 630,
-          alt: "AI Shell Switch — Macを閉じても、AIの作業を止めない",
+          alt: "AI Shell Switch — AIの実行環境を、止めない",
         },
       ],
     },
