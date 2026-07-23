@@ -47,6 +47,12 @@ export default function Home() {
             Macを眠らせないでおく。
           </h1>
           <p className="lead">{"AI Shell Switch は、macOSのスリープ設定を切り替えるだけの小さなユーティリティです。長時間のローカルAI処理やビルドの途中でMacがスリープして止まってしまう——それだけを防ぎます。AIを起動したり、監視したりはしません。終わったらOFFにすれば、いつものスリープに戻ります。"}</p>
+          <ul className="spec">
+            <li>macOS 13以降</li>
+            <li>Apple Silicon</li>
+            <li>MIT License</li>
+            <li>アカウント不要</li>
+          </ul>
           <div className="actions">
             <a className="button" href={repositoryUrl} target="_blank" rel="noreferrer">
               GitHubでソースを見る
@@ -58,7 +64,7 @@ export default function Home() {
           <p className="build-note">
             {"署名済みアプリの配布ではありません。ソースを取得して、自分のMacでビルドして使います("}
             <a href="#install">手順はこちら</a>
-            {")。macOS 13以降・Apple Silicon対応で、Windowsでは動きません。アカウント登録は不要です。"}
+            {")。macOS専用のツールで、Windowsでは動きません。"}
           </p>
 
           <figure className="app-window">
@@ -133,14 +139,22 @@ export default function Home() {
           <p>
             コマンドは5つだけです。スクリプトやエージェントのワークフローにそのまま組み込めます。
           </p>
-          <pre className="terminal">
-            <code>
-              <span className="prompt">$</span>
-              {" ai-status\nAIクラムシェル運転: READY\n電源: AC Power\n"}
-              <span className="prompt">$</span>
-              {" ai-on"}
-            </code>
-          </pre>
+          <div className="terminal-frame">
+            <div className="term-bar" aria-hidden="true">
+              <span className="dot dot-r" />
+              <span className="dot dot-y" />
+              <span className="dot dot-g" />
+              <span className="term-title">ai-shell-switch — zsh</span>
+            </div>
+            <pre className="terminal">
+              <code>
+                <span className="prompt">$</span>
+                {" ai-status\nAIクラムシェル運転: READY\n電源: AC Power\n"}
+                <span className="prompt">$</span>
+                {" ai-on"}
+              </code>
+            </pre>
+          </div>
           <dl className="commands">
             {commands.map(([name, description]) => (
               <div key={name}>
