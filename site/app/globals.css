@@ -14,9 +14,17 @@
   --accent: #0e8577;      /* アイコンのトグル色から。リンクに使用 */
   --button-bg: #26241f;
   --button-ink: #faf9f6;
+  --button-hover: #403c34;
   --terminal-bg: #2b2a26;
   --terminal-ink: #e8e6df;
   --terminal-prompt: #7fd6c9;
+  --win-body: #f3f2ee;
+  --win-bar: #e9e7e1;
+  --win-border: #d9d6cd;
+  --win-btn: #ffffff;
+  --win-btn-border: #d0cdc5;
+  --win-muted: #6d685e;
+  --win-faint: #96917f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,9 +39,21 @@
     --accent: #5fc4b6;
     --button-bg: #e9e7e0;
     --button-ink: #1e1d1a;
+    --button-hover: #d3d0c6;
     --terminal-bg: #171614;
     --terminal-ink: #d9d6cd;
     --terminal-prompt: #5fc4b6;
+    --win-body: #262521;
+    --win-bar: #312f2a;
+    --win-border: #44413a;
+    --win-btn: #3a3833;
+    --win-btn-border: #4c4941;
+    --win-muted: #a39e93;
+    --win-faint: #7c776c;
+  }
+
+  ::selection {
+    background: rgba(95, 196, 182, .3);
   }
 }
 
@@ -51,6 +71,11 @@ body {
   line-height: 1.95;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection {
+  background: rgba(14, 133, 119, .18);
 }
 
 .wrap {
@@ -80,9 +105,10 @@ code {
 
 pre {
   margin: 14px 0 0;
-  padding: 14px 18px;
+  padding: 15px 20px;
   background: var(--code-bg);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   overflow-x: auto;
   line-height: 1.7;
 }
@@ -131,11 +157,12 @@ h1 {
   margin: 0 0 22px;
   font-size: clamp(27px, 5.4vw, 36px);
   line-height: 1.5;
-  letter-spacing: .01em;
+  letter-spacing: .02em;
   font-weight: 700;
+  font-feature-settings: "palt" 1;
 }
 
-.lead { margin: 0; }
+.lead { margin: 0; font-size: 17px; }
 
 .actions {
   display: flex;
@@ -156,8 +183,9 @@ h1 {
   text-decoration: none;
   font-weight: 600;
   font-size: 14.5px;
+  transition: background-color .15s ease;
 }
-.button:hover { opacity: .85; }
+.button:hover { background: var(--button-hover); }
 
 .textlink { font-size: 14.5px; }
 
@@ -166,6 +194,85 @@ h1 {
   color: var(--muted);
   font-size: 13.5px;
   line-height: 1.9;
+}
+
+/* ---- アプリ画面の再現 ---- */
+
+.app-window { margin: 44px 0 0; }
+
+.win {
+  max-width: 440px;
+  overflow: hidden;
+  border: 1px solid var(--win-border);
+  border-radius: 12px;
+  background: var(--win-body);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .10), 0 2px 8px rgba(0, 0, 0, .05);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.win-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 13px;
+  background: var(--win-bar);
+  border-bottom: 1px solid var(--win-border);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot-r { background: #ff5f57; }
+.dot-y { background: #febc2e; }
+.dot-g { background: #28c840; }
+.win-title {
+  position: absolute;
+  left: 0; right: 0;
+  text-align: center;
+  color: var(--win-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.win-body { padding: 20px 24px 14px; }
+.win-head { display: flex; align-items: center; gap: 13px; }
+.win-head img { border-radius: 11px; }
+.win-head strong { display: block; font-size: 18px; line-height: 1.35; }
+.win-head span { display: block; color: var(--win-muted); font-size: 11.5px; }
+.win-status { margin: 16px 0 0; font-size: 16px; font-weight: 700; }
+.win-detail { margin: 6px 0 0; color: var(--win-muted); font-size: 12.5px; }
+.win-power { margin: 10px 0 0; font-size: 12px; font-weight: 500; }
+.win-buttons { display: flex; gap: 10px; margin-top: 14px; }
+.mac-btn {
+  flex: 1;
+  padding: 7px 10px;
+  text-align: center;
+  background: var(--win-btn);
+  border: 1px solid var(--win-btn-border);
+  border-radius: 7px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.win-foot {
+  margin: 14px 0 0;
+  color: var(--win-faint);
+  text-align: center;
+  font-size: 11px;
+}
+
+.app-window figcaption {
+  margin-top: 12px;
+  color: var(--faint);
+  font-size: 12.5px;
+}
+
+@media (max-width: 480px) {
+  .win-body { padding: 16px 16px 12px; }
+  .win-buttons { flex-direction: column; }
+  .mac-btn { white-space: normal; }
 }
 
 /* ---- 本文セクション ---- */
@@ -177,7 +284,9 @@ h2 {
   margin: 0 0 14px;
   font-size: 20px;
   line-height: 1.6;
+  letter-spacing: .02em;
   font-weight: 700;
+  font-feature-settings: "palt" 1;
 }
 
 section p { margin: 0 0 10px; }
@@ -204,6 +313,7 @@ ul.plain li::before {
 pre.terminal {
   background: var(--terminal-bg);
   color: var(--terminal-ink);
+  border-color: transparent;
 }
 pre.terminal code { color: inherit; }
 pre.terminal .prompt { color: var(--terminal-prompt); }

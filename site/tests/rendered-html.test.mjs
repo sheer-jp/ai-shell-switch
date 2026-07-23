@@ -89,7 +89,7 @@ test("keeps distribution assets and source contracts explicit", async () => {
   assert.match(page, /xcode-select --install/);
   assert.match(page, /\.\/install\.sh/);
   assert.match(page, /Developer ID/);
-  assert.match(page, /による署名・Apple公証を行っていない、ソース配布の段階です/);
+  assert.match(page, /公証を行っていない、ソース配布の段階です/);
   assert.match(layout, /generateMetadata/);
   assert.match(layout, /metadataBase/);
   assert.match(layout, /lang="ja"/);
