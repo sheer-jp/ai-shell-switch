@@ -205,6 +205,11 @@ if ! /usr/bin/grep -q '\["/usr/bin/open", "-gj", Bundle.main.bundlePath, "--args
   exit 1
 fi
 
+if ! /usr/bin/grep -q 'statusItem.isVisible = true' "$ROOT/Sources/AppDelegate.swift"; then
+  printf 'menu bar status item must restore itself when hidden\n' >&2
+  exit 1
+fi
+
 rule_command_count=$(/usr/bin/grep -Eh '^[[:space:]]*"/usr/bin/pmset -a disablesleep [01]"' "${SOURCE_FILES[@]}" | /usr/bin/wc -l | /usr/bin/tr -d ' ')
 if [ "$rule_command_count" -ne 2 ]; then
   printf 'sudoers contract must contain exactly two pmset commands\n' >&2

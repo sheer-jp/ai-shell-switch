@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureMenu() {
+        restoreStatusItemVisibility()
         statusItem.button?.toolTip = "AI稼働モード切り替え"
 
         openControlItem.target = self
@@ -102,6 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshState() {
+        restoreStatusItemVisibility()
         currentState = PowerController.read()
 
         switch currentState.mode {
@@ -120,6 +122,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshLoginItem()
         refreshPrivilegeItem()
         controlWindowController.update(currentState)
+    }
+
+    private func restoreStatusItemVisibility() {
+        // A status item can be hidden by a Command-drag or after the menu bar is
+        // rebuilt while this process stays alive. Keep the control surface
+        // available instead of requiring the user to restart the app.
+        statusItem.isVisible = true
     }
 
     @objc private func toggleMode() {
