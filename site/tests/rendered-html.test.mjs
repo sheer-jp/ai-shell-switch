@@ -39,14 +39,15 @@ test("server-renders the finished Japanese distribution page", async () => {
   assert.match(html, /<html[^>]+lang="ja"/i);
   assert.match(html, /AI Shell Switch/);
   assert.match(html, /AIの実行環境を/);
-  assert.match(html, /THE AI UPTIME LAYER FOR macOS/);
-  assert.match(html, /PRODUCT INTELLIGENCE/);
-  assert.match(html, /ONE CONTROL PLANE/);
+  assert.match(html, /Trust Driven System Labs の実験的プロダクト/);
+  assert.match(html, /Macを眠らせないでおく/);
+  assert.match(html, /スリープ設定を切り替えるだけ/);
+  assert.match(html, /GitHubでソースを見る/);
   assert.match(html, /ソースZIPをダウンロード/);
   assert.match(html, /Apple Silicon/);
-  assert.match(html, /macOS 13\+/);
+  assert.match(html, /macOS 13以降/);
   assert.match(html, /Xcode Command Line Tools/);
-  assert.match(html, /Source distribution notice/);
+  assert.match(html, /署名済みアプリの配布ではありません/);
   assert.match(
     html,
     /https:\/\/github\.com\/sheer-jp\/ai-shell-switch\/archive\/refs\/heads\/main\.zip/,
@@ -87,7 +88,8 @@ test("keeps distribution assets and source contracts explicit", async () => {
 
   assert.match(page, /xcode-select --install/);
   assert.match(page, /\.\/install\.sh/);
-  assert.match(page, /Developer IDで署名・公証された完成済みアプリではありません/);
+  assert.match(page, /Developer ID/);
+  assert.match(page, /公証を行っていない、ソース配布の段階です/);
   assert.match(layout, /generateMetadata/);
   assert.match(layout, /metadataBase/);
   assert.match(layout, /lang="ja"/);
