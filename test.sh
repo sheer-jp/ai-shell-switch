@@ -210,6 +210,24 @@ if ! /usr/bin/grep -q 'statusItem.isVisible = true' "$ROOT/Sources/AppDelegate.s
   exit 1
 fi
 
+for compact_status_contract in \
+  "NSStatusItem.squareLength" \
+  "bolt.circle.fill" \
+  "moon.zzz" \
+  "exclamationmark.triangle.fill" \
+  "button.imagePosition = .imageOnly" \
+  "button.setAccessibilityLabel"; do
+  if ! /usr/bin/grep -q "$compact_status_contract" "$ROOT/Sources/AppDelegate.swift"; then
+    printf 'compact status icon contract missing: %s\n' "$compact_status_contract" >&2
+    exit 1
+  fi
+done
+
+if /usr/bin/grep -q 'statusItem.button?.title = currentState' "$ROOT/Sources/AppDelegate.swift"; then
+  printf 'status item must not use a variable-width state title\n' >&2
+  exit 1
+fi
+
 rule_command_count=$(/usr/bin/grep -Eh '^[[:space:]]*"/usr/bin/pmset -a disablesleep [01]"' "${SOURCE_FILES[@]}" | /usr/bin/wc -l | /usr/bin/tr -d ' ')
 if [ "$rule_command_count" -ne 2 ]; then
   printf 'sudoers contract must contain exactly two pmset commands\n' >&2

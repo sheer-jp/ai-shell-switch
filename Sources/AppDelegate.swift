@@ -1,7 +1,7 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
@@ -42,7 +42,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureMenu() {
         restoreStatusItemVisibility()
-        statusItem.button?.toolTip = "AI稼働モード切り替え"
+        statusItem.button?.imagePosition = .imageOnly
+        statusItem.button?.title = ""
 
         openControlItem.target = self
         toggleItem.target = self
@@ -108,20 +109,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         switch currentState.mode {
         case .on:
-            statusItem.button?.title = currentState.onACPower ? "AI ON" : "AI ON ⚠︎"
             stateItem.title = currentState.onACPower
                 ? "状態: ON（蓋を閉じても継続）"
                 : "状態: ON（バッテリー注意）"
             toggleItem.title = "通常スリープに戻す（OFF）"
         case .off:
-            statusItem.button?.title = "AI OFF"
             stateItem.title = "状態: OFF（通常スリープ）"
             toggleItem.title = "AI稼働モードにする（ON）"
         }
 
+        refreshStatusIcon()
         refreshLoginItem()
         refreshPrivilegeItem()
         controlWindowController.update(currentState)
+    }
+
+    private func refreshStatusIcon() {
+        let symbolName: String
+        let accessibilityLabel: String
+
+        switch currentState.mode {
+        case .on where currentState.onACPower:
+            symbolName = "bolt.circle.fill"
+            accessibilityLabel = "AI Shell Switch: AI ON"
+        case .on:
+            symbolName = "exclamationmark.triangle.fill"
+            accessibilityLabel = "AI Shell Switch: AI ON、バッテリー注意"
+        case .off:
+            symbolName = "moon.zzz"
+            accessibilityLabel = "AI Shell Switch: AI OFF"
+        }
+
+        guard let button = statusItem.button else { return }
+        let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        let image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: accessibilityLabel
+        )?.withSymbolConfiguration(configuration)
+        image?.isTemplate = true
+        button.image = image
+        button.imagePosition = .imageOnly
+        button.title = ""
+        button.toolTip = accessibilityLabel
+        button.setAccessibilityLabel(accessibilityLabel)
     }
 
     private func restoreStatusItemVisibility() {
