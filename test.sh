@@ -205,10 +205,26 @@ if ! /usr/bin/grep -q '\["/usr/bin/open", "-gj", Bundle.main.bundlePath, "--args
   exit 1
 fi
 
-if ! /usr/bin/grep -q 'statusItem.isVisible = true' "$ROOT/Sources/AppDelegate.swift"; then
+if ! /usr/bin/grep -q 'statusItem?.isVisible = true' "$ROOT/Sources/AppDelegate.swift"; then
   printf 'menu bar status item must restore itself when hidden\n' >&2
   exit 1
 fi
+
+for display_recovery_contract in \
+  "NSApplication.didChangeScreenParametersNotification" \
+  "NSStatusBar.system.removeStatusItem" \
+  "applicationShouldHandleReopen" \
+  "rebuildStatusItem()" \
+  "メニューバーアイコンを復活" \
+  "restoreStatusItemAction" \
+  "auxiliaryTopRightArea" \
+  "enableDockFallbackIfStatusItemIsObscured" \
+  "setActivationPolicy(.regular)"; do
+  if ! /usr/bin/grep -q "$display_recovery_contract" "${SOURCE_FILES[@]}"; then
+    printf 'display recovery contract missing: %s\n' "$display_recovery_contract" >&2
+    exit 1
+  fi
+done
 
 for compact_status_contract in \
   "NSStatusItem.squareLength" \

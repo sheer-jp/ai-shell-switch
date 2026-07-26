@@ -1,7 +1,7 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private var statusItem: NSStatusItem?
     private let menu = NSMenu()
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
@@ -10,15 +10,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let loginItem = NSMenuItem(title: "ログイン時にも起動", action: #selector(toggleLoginItem), keyEquivalent: "")
     private lazy var controlWindowController = ControlWindowController(
         toggleAction: { [weak self] in self?.toggleMode() },
-        refreshAction: { [weak self] in self?.refreshState() }
+        refreshAction: { [weak self] in self?.refreshState() },
+        restoreStatusItemAction: { [weak self] in self?.rebuildStatusItem() }
     )
     private var timer: Timer?
     private var globalHotKey: GlobalHotKey?
+    private var statusItemRebuildWorkItem: DispatchWorkItem?
+    private var statusItemVisibilityWorkItem: DispatchWorkItem?
     private var currentState = PowerState(mode: .off, onACPower: false)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         configureMenu()
+        observeDisplayChanges()
         configureGlobalHotKey()
         enableLaunchAtLoginIfNeeded()
         refreshState()
@@ -31,20 +35,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        rebuildStatusItem()
         showControlWindow()
         return true
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
+        statusItemRebuildWorkItem?.cancel()
+        statusItemVisibilityWorkItem?.cancel()
+        NotificationCenter.default.removeObserver(self)
         globalHotKey = nil
     }
 
     private func configureMenu() {
-        restoreStatusItemVisibility()
-        statusItem.button?.imagePosition = .imageOnly
-        statusItem.button?.title = ""
-
         openControlItem.target = self
         toggleItem.target = self
         privilegeItem.target = self
@@ -70,9 +74,75 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let quitItem = NSMenuItem(title: "終了", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
-        statusItem.menu = menu
+        installStatusItem()
         refreshPrivilegeItem()
         refreshLoginItem()
+    }
+
+    private func observeDisplayChanges() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(screenParametersDidChange),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+    }
+
+    @objc private func screenParametersDidChange(_ notification: Notification) {
+        statusItemRebuildWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.rebuildStatusItem()
+        }
+        statusItemRebuildWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: workItem)
+    }
+
+    private func installStatusItem() {
+        if let currentItem = statusItem {
+            NSStatusBar.system.removeStatusItem(currentItem)
+        }
+
+        let newItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem = newItem
+        newItem.button?.imagePosition = .imageOnly
+        newItem.button?.title = ""
+        newItem.menu = menu
+        newItem.isVisible = true
+        refreshStatusIcon()
+        scheduleStatusItemVisibilityAssessment()
+    }
+
+    private func rebuildStatusItem() {
+        installStatusItem()
+        refreshState()
+    }
+
+    private func scheduleStatusItemVisibilityAssessment() {
+        statusItemVisibilityWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.enableDockFallbackIfStatusItemIsObscured()
+        }
+        statusItemVisibilityWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
+    }
+
+    private func enableDockFallbackIfStatusItemIsObscured() {
+        guard !statusItemIsInsideSafeMenuBarArea() else { return }
+        NSApp.setActivationPolicy(.regular)
+    }
+
+    private func statusItemIsInsideSafeMenuBarArea() -> Bool {
+        guard let itemWindow = statusItem?.button?.window,
+              let screen = itemWindow.screen else {
+            return false
+        }
+
+        let itemFrame = itemWindow.frame
+        let safeAreas = [screen.auxiliaryTopLeftArea, screen.auxiliaryTopRightArea].compactMap { $0 }
+        if safeAreas.isEmpty {
+            return screen.frame.contains(itemFrame)
+        }
+        return safeAreas.contains { $0.contains(itemFrame) }
     }
 
     private func configureGlobalHotKey() {
@@ -140,7 +210,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             accessibilityLabel = "AI Shell Switch: AI OFF"
         }
 
-        guard let button = statusItem.button else { return }
+        guard let button = statusItem?.button else { return }
         let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
         let image = NSImage(
             systemSymbolName: symbolName,
@@ -158,7 +228,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // A status item can be hidden by a Command-drag or after the menu bar is
         // rebuilt while this process stays alive. Keep the control surface
         // available instead of requiring the user to restart the app.
-        statusItem.isVisible = true
+        if statusItem == nil {
+            installStatusItem()
+        }
+        statusItem?.isVisible = true
     }
 
     @objc private func toggleMode() {
