@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(toggleItem)
 
-        let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥A（画面 / 緊急OFF）", action: nil, keyEquivalent: "")
+        let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
         shortcutItem.isEnabled = false
         menu.addItem(shortcutItem)
         menu.addItem(privilegeItem)
@@ -156,12 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func handleGlobalHotKey() {
         refreshState()
-        switch currentState.mode {
-        case .on:
-            toggleMode()
-        case .off:
-            showControlWindow()
-        }
+        toggleMode()
     }
 
     @objc private func showControlWindow() {
@@ -237,11 +232,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func toggleMode() {
         let enabling = currentState.mode == .off
         if enabling && !currentState.onACPower {
-            showAlert(
-                title: "電源アダプタが必要です",
-                message: "安全のため、AI稼働モードは電源アダプタ接続中だけONにできます。"
-            )
-            return
+            guard confirm(
+                title: "バッテリー駆動中にONにしますか？",
+                message: "スリープを止めたまま忘れると、電池の消耗と発熱が進みます。できれば電源アダプタの接続をおすすめします。",
+                button: "ONにする"
+            ) else { return }
         }
 
         do {

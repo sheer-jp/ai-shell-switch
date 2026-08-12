@@ -116,7 +116,7 @@ assert_state 1
 assert_state 0
 
 if AI_SHELL_SWITCH_TEST_POWER="Battery Power" "$SWITCH" on >"$temp_dir/battery.out" 2>&1; then
-  printf 'battery guard unexpectedly allowed ON\n' >&2
+  printf 'battery guard unexpectedly allowed non-interactive ON without --force\n' >&2
   exit 1
 else
   battery_exit=$?
@@ -125,6 +125,19 @@ if [ "$battery_exit" -ne 2 ]; then
   printf 'battery guard returned %s instead of 2\n' "$battery_exit" >&2
   exit 1
 fi
+assert_state 0
+if ! /usr/bin/grep -q -- '--force' "$temp_dir/battery.out"; then
+  printf 'battery guard message must mention --force\n' >&2
+  exit 1
+fi
+
+AI_SHELL_SWITCH_TEST_POWER="Battery Power" "$SWITCH" on --force >/dev/null
+assert_state 1
+AI_SHELL_SWITCH_TEST_POWER="Battery Power" "$bin_dir/ai-off" >/dev/null
+assert_state 0
+AI_SHELL_SWITCH_TEST_POWER="Battery Power" "$bin_dir/ai-on" --force >/dev/null
+assert_state 1
+AI_SHELL_SWITCH_TEST_POWER="Battery Power" "$bin_dir/ai-toggle" >/dev/null
 assert_state 0
 
 printf '0\n' >"$rule_file"
@@ -153,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.3.0"*) ;;
+  *"1.4.0"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -180,7 +193,8 @@ for contract_text in \
   "applicationShouldHandleReopen" \
   "showControlWindow" \
   'CommandLine.arguments.contains("--background")' \
-  "ショートカット: ⌃⌥A（画面 / 緊急OFF）" \
+  "ショートカット: ⌃⌥A（ONとOFFを切り替え）" \
+  "バッテリー駆動中にONにしますか？" \
   "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
@@ -193,9 +207,15 @@ done
 
 shortcut_handler=$(/usr/bin/sed -n '/private func handleGlobalHotKey()/,/^    }/p' "$ROOT/Sources/AppDelegate.swift")
 case "$shortcut_handler" in
-  *"case .on:"*"toggleMode()"*"case .off:"*"showControlWindow()"*) ;;
+  *"toggleMode()"*) ;;
   *)
-    printf 'global shortcut must open controls from OFF and may only toggle directly from ON\n' >&2
+    printf 'global shortcut must toggle between ON and OFF\n' >&2
+    exit 1
+    ;;
+esac
+case "$shortcut_handler" in
+  *"showControlWindow()"*)
+    printf 'global shortcut must not open the control window instead of toggling\n' >&2
     exit 1
     ;;
 esac

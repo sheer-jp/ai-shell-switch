@@ -52,8 +52,8 @@ final class ControlWindowController: NSObject {
             statusLabel.stringValue = "AI OFF"
             statusLabel.textColor = .labelColor
             detailLabel.stringValue = "普通のmacOSスリープ設定です。蓋を閉じると通常どおりスリープできます。"
-            toggleButton.title = state.onACPower ? "AI稼働モードにする（ON）" : "AC電源接続後にON"
-            toggleButton.isEnabled = state.onACPower
+            toggleButton.title = "AI稼働モードにする（ON）"
+            toggleButton.isEnabled = true
         }
     }
 
@@ -127,7 +127,7 @@ final class ControlWindowController: NSObject {
         buttonStack.spacing = 10
 
         let footerLabel = NSTextField(
-            labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌃⌥A: 操作 / 緊急OFF"
+            labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌃⌥A: ON/OFF切り替え"
         )
         footerLabel.textColor = .tertiaryLabelColor
         footerLabel.font = .systemFont(ofSize: 11)
