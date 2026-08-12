@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly APP_NAME="AI Shell Switch"
-readonly CLI_VERSION="1.3.0"
+readonly CLI_VERSION="1.4.0"
 readonly PMSET="${AI_SHELL_SWITCH_PMSET:-/usr/bin/pmset}"
 readonly SUDO="${AI_SHELL_SWITCH_SUDO:-/usr/bin/sudo}"
 readonly OSASCRIPT="${AI_SHELL_SWITCH_OSASCRIPT:-/usr/bin/osascript}"
@@ -115,6 +115,33 @@ status() {
   printf '通常のmacOSスリープ動作です。\n'
 }
 
+confirm_battery_on() {
+  local answer=""
+
+  if [ "$FORCE" -eq 1 ]; then
+    return 0
+  fi
+
+  if [ -t 0 ] && [ -t 1 ]; then
+    printf 'バッテリー駆動中です。電池の消耗と発熱が進みやすくなります。\n'
+    printf 'ONにしますか? [y/N]: '
+    IFS= read -r answer || answer=""
+    case "$answer" in
+      y | Y | yes | Yes | YES)
+        return 0
+        ;;
+      *)
+        printf '中止しました。--force を付けると確認なしでONにできます。\n'
+        return 1
+        ;;
+    esac
+  fi
+
+  error "バッテリー駆動中のため、ONにしませんでした。"
+  error "電源アダプタを接続するか、--force を付けて実行してください（例: ai-on --force）。"
+  return 1
+}
+
 turn_on() {
   local source
   local value
@@ -131,9 +158,7 @@ turn_on() {
 
   source=$(power_source) || source=""
   if [ "$source" != "AC Power" ]; then
-    error "安全のため、電源アダプタ接続中だけONにできます。"
-    error "接続後にもう一度 ai-on を実行してください。"
-    return 2
+    confirm_battery_on || return 2
   fi
 
   set_sleep_disabled 1
@@ -317,7 +342,7 @@ usage() {
 使い方: ai-shell-switch COMMAND
 
 Commands:
-  on        AI稼働モードをONにする（AC電源接続時のみ）
+  on        AI稼働モードをONにする（バッテリー駆動中は確認あり）
   off       通常のmacOSスリープへ戻す
   toggle    ON/OFFを切り替える
   status    現在の状態を表示する
@@ -326,6 +351,9 @@ Commands:
   doctor    構成を変更せず診断する
   version   バージョンを表示する
   help      このヘルプを表示する
+
+Options:
+  --force, -f   バッテリー駆動中でも確認なしでONにする（on / toggle と併用）
 
 Shortcuts:
   ai-on  ai-off  ai-toggle  ai-status  ai-setup  ai-unsetup  ai-doctor
@@ -344,6 +372,17 @@ case "$INVOCATION" in
   ai-unsetup) default_command=unsetup ;;
   ai-doctor) default_command=doctor ;;
 esac
+
+FORCE=0
+filtered_args=()
+for arg in "$@"; do
+  case "$arg" in
+    --force | -f) FORCE=1 ;;
+    *) filtered_args+=("$arg") ;;
+  esac
+done
+readonly FORCE
+set -- ${filtered_args[@]+"${filtered_args[@]}"}
 
 command_name=${1:-$default_command}
 if [ "$#" -gt 0 ]; then
