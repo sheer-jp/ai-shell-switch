@@ -5,7 +5,7 @@ const sourceZipUrl =
   "https://github.com/sheer-jp/ai-shell-switch/archive/refs/heads/main.zip";
 
 const commands = [
-  ["ai-on", "スリープを止める(AC電源接続中のみ)"],
+  ["ai-on", "スリープを止める(バッテリー時は確認つき)"],
   ["ai-off", "いつものスリープに戻す"],
   ["ai-toggle", "ONとOFFを切り替える"],
   ["ai-status", "いまの状態と電源を表示する"],
@@ -30,7 +30,7 @@ export default function Home() {
       <main id="top">
         <section className="intro">
           <p className="labs-line">
-            Trust Driven System Labs の実験的プロダクトです。v1.3 ·
+            Trust Driven System Labs の実験的プロダクトです。v1.4 ·
             オープンソース(MIT)
           </p>
           <Image
@@ -92,7 +92,7 @@ export default function Home() {
                   <span className="mac-btn">AI稼働モードにする(ON)</span>
                   <span className="mac-btn">状態を更新</span>
                 </div>
-                <p className="win-foot">⌃⌥A: 操作画面を開く / ON中は緊急OFF</p>
+                <p className="win-foot">⌃⌥A: ONとOFFを切り替え</p>
               </div>
             </div>
             <figcaption>
@@ -130,7 +130,7 @@ export default function Home() {
           <p>
             {"だから AI Shell Switch は、止める機能ではなく「切り替えやすさ」を中心に作っています。"}
             <code>ai-on</code> と <code>ai-off</code>{" "}
-            {"のひとことで確実に行き来できて、いまの状態はアプリでもメニューバーでも確認できる。ONの条件は絞り、OFFはいつでもできる。長時間処理を日常的に回すほど、この差が効いてきます。"}
+            {"のひとことで確実に行き来できて、いまの状態はアプリでもメニューバーでも確認できる。電池でのONにはひと手間はさみ、OFFはいつでもできる。長時間処理を日常的に回すほど、この差が効いてきます。"}
           </p>
         </section>
 
@@ -174,12 +174,13 @@ export default function Home() {
           </p>
           <ul className="plain">
             <li>
-              <strong>ONにできるのは、AC電源につながっているときだけ。</strong>
-              バッテリー駆動中に新しくONにすることはできません。
+              <strong>バッテリー駆動中のONは、ひと呼吸おきます。</strong>
+              移動中にフタを閉じたまま使いたいときのために、電池でもONにできます。アプリでは確認ポップアップ、スクリプトからは{" "}
+              <code>--force</code> の指定が必要です。
             </li>
             <li>
-              <strong>OFFはいつでもできます。</strong>
-              ショートカット ⌃⌥A で、すぐにいつものスリープへ戻せます。
+              <strong>ONもOFFも、ショートカット ⌃⌥A で切り替えられます。</strong>
+              OFFはいつでも、すぐに効きます。
             </li>
             <li>
               <strong>
