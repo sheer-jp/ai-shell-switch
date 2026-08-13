@@ -15,6 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
     private var timer: Timer?
     private var globalHotKey: GlobalHotKey?
+    private let hud = HudPanel()
+    private var batteryArmDeadline: Date?
     private var statusItemRebuildWorkItem: DispatchWorkItem?
     private var statusItemVisibilityWorkItem: DispatchWorkItem?
     private var currentState = PowerState(mode: .off, onACPower: false)
@@ -154,8 +156,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // ショートカット経由の電池ONは、ダイアログではなく「二度押し」で確認する。
+    // ダイアログは別スペースや背面に埋もれて気づけないことがあるため、
+    // 埋もれないHUDパネルで案内し、もう一度⌃⌥Aが押されたら確定する。
     private func handleGlobalHotKey() {
         refreshState()
+        let enabling = currentState.mode == .off
+
+        if enabling && !currentState.onACPower {
+            if let deadline = batteryArmDeadline, Date() < deadline {
+                batteryArmDeadline = nil
+                hud.hide()
+                performToggle(enabling: true)
+                if currentState.mode == .on {
+                    hud.show("ONにしました。バッテリーの消耗と発熱に注意してください", for: 2.5)
+                }
+            } else {
+                batteryArmDeadline = Date().addingTimeInterval(6)
+                hud.show("バッテリー駆動中です。もう一度 ⌃⌥A を押すとONにします", for: 6)
+            }
+            return
+        }
+
+        batteryArmDeadline = nil
         toggleMode()
     }
 
@@ -239,6 +262,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ) else { return }
         }
 
+        performToggle(enabling: enabling)
+    }
+
+    private func performToggle(enabling: Bool) {
         do {
             try PowerController.setSleepDisabled(enabling)
             refreshState()
@@ -340,25 +367,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // メニューバー常駐アプリのNSAlertは、そのままだと非アクティブのまま
     // 別スペースや背面に出て気づけないことがある。いま操作中の画面の
     // アクティブなスペースへ、フルスクリーン上でも最前面に表示する。
+    // runModalは自前でウィンドウの位置と重なり順を触るため、モーダル開始
+    // 直後(main queueの次のターン)にもう一度こちらの指定を適用し直す。
     private func presentFront(_ alert: NSAlert) -> NSApplication.ModalResponse {
         NSApp.activate(ignoringOtherApps: true)
         alert.layout()
 
         let window = alert.window
-        window.level = .floating
-        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+        let applyFrontPlacement = {
+            window.level = .floating
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
 
-        let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
-            ?? NSScreen.main
-        if let visible = screen?.visibleFrame {
-            let size = window.frame.size
-            window.setFrameOrigin(NSPoint(
-                x: visible.midX - size.width / 2,
-                y: visible.midY - size.height / 2 + visible.height * 0.12
-            ))
+            let mouse = NSEvent.mouseLocation
+            let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+                ?? NSScreen.main
+            if let visible = screen?.visibleFrame {
+                let size = window.frame.size
+                window.setFrameOrigin(NSPoint(
+                    x: visible.midX - size.width / 2,
+                    y: visible.midY - size.height / 2 + visible.height * 0.12
+                ))
+            }
+
+            window.orderFrontRegardless()
         }
 
+        applyFrontPlacement()
+        DispatchQueue.main.async(execute: applyFrontPlacement)
         window.makeKeyAndOrderFront(nil)
         return alert.runModal()
     }
