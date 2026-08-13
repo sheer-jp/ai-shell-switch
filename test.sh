@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.4.1"*) ;;
+  *"1.4.2"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -198,6 +198,9 @@ for contract_text in \
   "presentFront(" \
   "fullScreenAuxiliary" \
   "makeKeyAndOrderFront" \
+  "nonactivatingPanel" \
+  "orderFrontRegardless" \
+  "もう一度 ⌃⌥A を押すとONにします" \
   "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
