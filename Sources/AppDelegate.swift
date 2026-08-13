@@ -324,8 +324,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.messageText = title
         alert.informativeText = message
         alert.addButton(withTitle: "OK")
-        NSApp.activate(ignoringOtherApps: true)
-        alert.runModal()
+        _ = presentFront(alert)
     }
 
     private func confirm(title: String, message: String, button: String) -> Bool {
@@ -335,8 +334,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.informativeText = message
         alert.addButton(withTitle: button)
         alert.addButton(withTitle: "キャンセル")
+        return presentFront(alert) == .alertFirstButtonReturn
+    }
+
+    // メニューバー常駐アプリのNSAlertは、そのままだと非アクティブのまま
+    // 別スペースや背面に出て気づけないことがある。いま操作中の画面の
+    // アクティブなスペースへ、フルスクリーン上でも最前面に表示する。
+    private func presentFront(_ alert: NSAlert) -> NSApplication.ModalResponse {
         NSApp.activate(ignoringOtherApps: true)
-        return alert.runModal() == .alertFirstButtonReturn
+        alert.layout()
+
+        let window = alert.window
+        window.level = .floating
+        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+            ?? NSScreen.main
+        if let visible = screen?.visibleFrame {
+            let size = window.frame.size
+            window.setFrameOrigin(NSPoint(
+                x: visible.midX - size.width / 2,
+                y: visible.midY - size.height / 2 + visible.height * 0.12
+            ))
+        }
+
+        window.makeKeyAndOrderFront(nil)
+        return alert.runModal()
     }
 
     @objc private func quit() {
