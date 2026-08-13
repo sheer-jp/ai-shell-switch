@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.4.0"*) ;;
+  *"1.4.1"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -195,6 +195,9 @@ for contract_text in \
   'CommandLine.arguments.contains("--background")' \
   "ショートカット: ⌃⌥A（ONとOFFを切り替え）" \
   "バッテリー駆動中にONにしますか？" \
+  "presentFront(" \
+  "fullScreenAuxiliary" \
+  "makeKeyAndOrderFront" \
   "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
