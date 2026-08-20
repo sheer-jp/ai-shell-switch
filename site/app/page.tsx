@@ -30,7 +30,7 @@ export default function Home() {
       <main id="top">
         <section className="intro">
           <p className="labs-line">
-            Trust Driven System Labs の実験的プロダクトです。v1.4 ·
+            Trust Driven System Labs の実験的プロダクトです。v1.5 ·
             オープンソース(MIT)
           </p>
           <Image
@@ -61,8 +61,14 @@ export default function Home() {
               ソースZIPをダウンロード ↓
             </a>
           </div>
+          <p className="hero-keys">
+            <span className="keycap">⌃</span>
+            <span className="keycap">⌥</span>
+            <span className="keycap">A</span>
+            <span className="keys-note">キーひとつで、ONもOFFも。</span>
+          </p>
           <p className="build-note">
-            {"署名済みアプリの配布ではありません。ソースを取得して、自分のMacでビルドして使います("}
+            {"配布しているのはソースコードです。取得して、自分のMacでビルドして使います("}
             <a href="#install">手順はこちら</a>
             {")。macOS専用のツールで、Windowsでは動きません。"}
           </p>
@@ -114,9 +120,11 @@ export default function Home() {
             <li>
               Macアプリ・メニューバー・CLIのどこから操作しても、同じ設定値を読み書きします。UIとターミナルで状態が食い違いません。
             </li>
-            <li>AIタスクの起動・監視・スケジューリングは行いません。</li>
             <li>
-              データはMacの外に出ません。ネットワーク通信も計測もありません。
+              AIタスクの起動・監視・スケジューリングは守備範囲の外。そこはお使いのAIツールに任せます。
+            </li>
+            <li>
+              通信も計測もしないつくりなので、データはMacの中だけにとどまります。
             </li>
           </ul>
         </section>
@@ -125,12 +133,23 @@ export default function Home() {
           <h2>スリープ禁止そのものは、macOSだけでもできます</h2>
           <p>
             <code>pmset</code> や <code>caffeinate</code>{" "}
-            {"を使えば、Macのスリープはもともと止められます。ただ、止めたまま戻し忘れると、発熱やバッテリーの消耗が静かに進みます。"}
+            {"を使えば、Macのスリープはもともと止められます。ただ、こわいのは止めたまま戻し忘れたとき。発熱やバッテリーの消耗が静かに進みます。"}
           </p>
           <p>
-            {"だから AI Shell Switch は、止める機能ではなく「切り替えやすさ」を中心に作っています。"}
-            <code>ai-on</code> と <code>ai-off</code>{" "}
-            {"のひとことで確実に行き来できて、いまの状態はアプリでもメニューバーでも確認できる。電池でのONにはひと手間はさみ、OFFはいつでもできる。長時間処理を日常的に回すほど、この差が効いてきます。"}
+            {"だから AI Shell Switch は、止める機能ではなく「切り替えやすさ」を中心に作っています。いちばん速いのはショートカットです。"}
+          </p>
+          <div className="key-row">
+            <span className="keycap">⌃</span>
+            <span className="keycap">⌥</span>
+            <span className="keycap">A</span>
+            <span className="key-desc">
+              どの画面にいても、押すたびにONとOFFが切り替わり、結果がいま見ている画面の上部に表示されます。キーの組み合わせは変更できます。
+            </span>
+          </div>
+          <p>
+            {"ターミナル派には "}
+            <code>ai-on</code> と <code>ai-off</code>
+            {"。いまの状態はアプリでもメニューバーでも確認できます。OFFにすれば、その場でいつものスリープへ。毎日の長時間処理ほど、この切り替えの軽さが差になります。"}
           </p>
         </section>
 
@@ -174,13 +193,13 @@ export default function Home() {
           </p>
           <ul className="plain">
             <li>
-              <strong>バッテリー駆動中のONは、ひと呼吸おきます。</strong>
-              移動中にフタを閉じたまま使いたいときのために、電池でもONにできます。アプリでは確認ポップアップ、ショートカットはもう一度押して確定、スクリプトからは{" "}
+              <strong>バッテリー駆動中のONも、気づける形で。</strong>
+              移動中にフタを閉じたまま使いたいときのために、電池でもONにできます。ショートカットなら切り替えた瞬間に画面へ注意が表示され、アプリでは確認ポップアップ、スクリプトからは{" "}
               <code>--force</code> の指定が必要です。
             </li>
             <li>
-              <strong>ONもOFFも、ショートカット ⌃⌥A で切り替えられます。</strong>
-              OFFはいつでも、すぐに効きます。
+              <strong>ONもOFFも、ショートカットひとつ。</strong>
+              押すたびに結果が画面上部に表示されるので、いまどちらの状態か迷いません。OFFにした瞬間、いつものスリープに戻ります。
             </li>
             <li>
               <strong>

@@ -47,7 +47,7 @@ test("server-renders the finished Japanese distribution page", async () => {
   assert.match(html, /Apple Silicon/);
   assert.match(html, /macOS 13以降/);
   assert.match(html, /Xcode Command Line Tools/);
-  assert.match(html, /署名済みアプリの配布ではありません/);
+  assert.match(html, /配布しているのはソースコードです/);
   assert.match(
     html,
     /https:\/\/github\.com\/sheer-jp\/ai-shell-switch\/archive\/refs\/heads\/main\.zip/,
