@@ -14,6 +14,9 @@ final class ControlWindowController: NSObject {
         target: nil,
         action: #selector(restoreStatusItemPressed)
     )
+    private let footerLabel = NSTextField(
+        labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌃⌥A: ON/OFF切り替え"
+    )
     private lazy var window = makeWindow()
 
     init(
@@ -34,6 +37,10 @@ final class ControlWindowController: NSObject {
         NSApp.activate(ignoringOtherApps: true)
         window.deminiaturize(nil)
         window.makeKeyAndOrderFront(nil)
+    }
+
+    func updateShortcutLabel(_ label: String) {
+        footerLabel.stringValue = "上のアイコンが見えない時はDockのアプリアイコンから開けます · \(label): ON/OFF切り替え"
     }
 
     func update(_ state: PowerState) {
@@ -126,9 +133,6 @@ final class ControlWindowController: NSObject {
         buttonStack.distribution = .fillEqually
         buttonStack.spacing = 10
 
-        let footerLabel = NSTextField(
-            labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌃⌥A: ON/OFF切り替え"
-        )
         footerLabel.textColor = .tertiaryLabelColor
         footerLabel.font = .systemFont(ofSize: 11)
         footerLabel.alignment = .center

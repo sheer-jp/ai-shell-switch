@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.4.2"*) ;;
+  *"1.5.0"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -193,14 +193,18 @@ for contract_text in \
   "applicationShouldHandleReopen" \
   "showControlWindow" \
   'CommandLine.arguments.contains("--background")' \
-  "ショートカット: ⌃⌥A（ONとOFFを切り替え）" \
+  "ショートカット: " \
+  "ショートカットを変更…" \
   "バッテリー駆動中にONにしますか？" \
   "presentFront(" \
   "fullScreenAuxiliary" \
   "makeKeyAndOrderFront" \
   "nonactivatingPanel" \
   "orderFrontRegardless" \
-  "もう一度 ⌃⌥A を押すとONにします" \
+  "OFFにしました。いつものスリープに戻ります" \
+  "viaHotKey" \
+  "GlobalShortcutKeyCode" \
+  "addLocalMonitorForEvents" \
   "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
@@ -213,7 +217,7 @@ done
 
 shortcut_handler=$(/usr/bin/sed -n '/private func handleGlobalHotKey()/,/^    }/p' "$ROOT/Sources/AppDelegate.swift")
 case "$shortcut_handler" in
-  *"toggleMode()"*) ;;
+  *"performToggle(enabling: enabling, viaHotKey: true)"*) ;;
   *)
     printf 'global shortcut must toggle between ON and OFF\n' >&2
     exit 1

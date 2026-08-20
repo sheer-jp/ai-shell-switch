@@ -1,4 +1,11 @@
 import AppKit
+import Carbon.HIToolbox
+
+private enum ShortcutDefaultsKey {
+    static let keyCode = "GlobalShortcutKeyCode"
+    static let modifiers = "GlobalShortcutModifiers"
+    static let label = "GlobalShortcutLabel"
+}
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
@@ -6,6 +13,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
     private let toggleItem = NSMenuItem(title: "切り替え", action: #selector(toggleMode), keyEquivalent: "")
+    private let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
+    private let changeShortcutItem = NSMenuItem(
+        title: "ショートカットを変更…",
+        action: #selector(showShortcutRecorder),
+        keyEquivalent: ""
+    )
     private let privilegeItem = NSMenuItem(title: "パスワード省略を設定…", action: #selector(togglePrivilegeMode), keyEquivalent: "")
     private let loginItem = NSMenuItem(title: "ログイン時にも起動", action: #selector(toggleLoginItem), keyEquivalent: "")
     private lazy var controlWindowController = ControlWindowController(
@@ -16,7 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var timer: Timer?
     private var globalHotKey: GlobalHotKey?
     private let hud = HudPanel()
-    private var batteryArmDeadline: Date?
+    private var shortcutRecorderWindow: NSWindow?
+    private var shortcutRecorderMonitor: Any?
     private var statusItemRebuildWorkItem: DispatchWorkItem?
     private var statusItemVisibilityWorkItem: DispatchWorkItem?
     private var currentState = PowerState(mode: .off, onACPower: false)
@@ -46,6 +60,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         timer?.invalidate()
         statusItemRebuildWorkItem?.cancel()
         statusItemVisibilityWorkItem?.cancel()
+        if let monitor = shortcutRecorderMonitor {
+            NSEvent.removeMonitor(monitor)
+            shortcutRecorderMonitor = nil
+        }
         NotificationCenter.default.removeObserver(self)
         globalHotKey = nil
     }
@@ -53,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func configureMenu() {
         openControlItem.target = self
         toggleItem.target = self
+        changeShortcutItem.target = self
         privilegeItem.target = self
         loginItem.target = self
         menu.addItem(openControlItem)
@@ -61,9 +80,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(toggleItem)
 
-        let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
         shortcutItem.isEnabled = false
         menu.addItem(shortcutItem)
+        menu.addItem(changeShortcutItem)
         menu.addItem(privilegeItem)
 
         let refreshItem = NSMenuItem(title: "状態を更新", action: #selector(refreshFromMenu), keyEquivalent: "r")
@@ -79,6 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installStatusItem()
         refreshPrivilegeItem()
         refreshLoginItem()
+        refreshShortcutLabels()
     }
 
     private func observeDisplayChanges() {
@@ -148,38 +168,207 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureGlobalHotKey() {
-        globalHotKey = GlobalHotKey { [weak self] in
+        globalHotKey = GlobalHotKey(
+            keyCode: storedShortcutKeyCode(),
+            modifiers: storedShortcutModifiers()
+        ) { [weak self] in
             self?.handleGlobalHotKey()
         }
         if globalHotKey == nil {
-            showAlert(title: "ショートカットを登録できません", message: "⌃⌥Aが他のアプリで使われていないか確認してください。")
+            showAlert(
+                title: "ショートカットを登録できません",
+                message: "\(shortcutLabel())が他のアプリで使われていないか確認してください。"
+            )
         }
     }
 
-    // ショートカット経由の電池ONは、ダイアログではなく「二度押し」で確認する。
-    // ダイアログは別スペースや背面に埋もれて気づけないことがあるため、
-    // 埋もれないHUDパネルで案内し、もう一度⌃⌥Aが押されたら確定する。
-    private func handleGlobalHotKey() {
-        refreshState()
-        let enabling = currentState.mode == .off
+    private func storedShortcutKeyCode() -> UInt32 {
+        let stored = UserDefaults.standard.object(forKey: ShortcutDefaultsKey.keyCode) as? Int
+        return UInt32(stored ?? Int(kVK_ANSI_A))
+    }
 
-        if enabling && !currentState.onACPower {
-            if let deadline = batteryArmDeadline, Date() < deadline {
-                batteryArmDeadline = nil
-                hud.hide()
-                performToggle(enabling: true)
-                if currentState.mode == .on {
-                    hud.show("ONにしました。バッテリーの消耗と発熱に注意してください", for: 2.5)
-                }
-            } else {
-                batteryArmDeadline = Date().addingTimeInterval(6)
-                hud.show("バッテリー駆動中です。もう一度 ⌃⌥A を押すとONにします", for: 6)
+    private func storedShortcutModifiers() -> UInt32 {
+        let stored = UserDefaults.standard.object(forKey: ShortcutDefaultsKey.modifiers) as? Int
+        return UInt32(stored ?? Int(controlKey | optionKey))
+    }
+
+    private func shortcutLabel() -> String {
+        UserDefaults.standard.string(forKey: ShortcutDefaultsKey.label) ?? "⌃⌥A"
+    }
+
+    private func refreshShortcutLabels() {
+        let label = shortcutLabel()
+        shortcutItem.title = "ショートカット: \(label)（ONとOFFを切り替え）"
+        controlWindowController.updateShortcutLabel(label)
+    }
+
+    // 押されたキーの組み合わせから、次回起動時にも復元できるよう
+    // Carbonの登録形式(keyCode/modifiers)とメニュー表示用ラベルを保存する。
+    // 登録に失敗した場合はUserDefaultsを書き換えず、直前の組み合わせのまま
+    // ホットキーを登録し直す。
+    private func applyShortcut(keyCode: UInt32, modifiers: UInt32, label: String) {
+        let previousKeyCode = storedShortcutKeyCode()
+        let previousModifiers = storedShortcutModifiers()
+
+        globalHotKey = nil
+        if let newHotKey = GlobalHotKey(keyCode: keyCode, modifiers: modifiers, action: { [weak self] in
+            self?.handleGlobalHotKey()
+        }) {
+            globalHotKey = newHotKey
+            let defaults = UserDefaults.standard
+            defaults.set(Int(keyCode), forKey: ShortcutDefaultsKey.keyCode)
+            defaults.set(Int(modifiers), forKey: ShortcutDefaultsKey.modifiers)
+            defaults.set(label, forKey: ShortcutDefaultsKey.label)
+            refreshShortcutLabels()
+        } else {
+            globalHotKey = GlobalHotKey(keyCode: previousKeyCode, modifiers: previousModifiers) { [weak self] in
+                self?.handleGlobalHotKey()
             }
+            showAlert(
+                title: "ショートカットを登録できません",
+                message: "\(label) は他のアプリで使われている可能性があります。別の組み合わせを選んでください。"
+            )
+        }
+    }
+
+    private func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
+        var mask: UInt32 = 0
+        if flags.contains(.control) { mask |= UInt32(controlKey) }
+        if flags.contains(.option) { mask |= UInt32(optionKey) }
+        if flags.contains(.shift) { mask |= UInt32(shiftKey) }
+        if flags.contains(.command) { mask |= UInt32(cmdKey) }
+        return mask
+    }
+
+    private func shortcutDisplayLabel(for event: NSEvent, flags: NSEvent.ModifierFlags) -> String {
+        var symbols = ""
+        if flags.contains(.control) { symbols += "⌃" }
+        if flags.contains(.option) { symbols += "⌥" }
+        if flags.contains(.shift) { symbols += "⇧" }
+        if flags.contains(.command) { symbols += "⌘" }
+        let keyChar = event.charactersIgnoringModifiers?.uppercased() ?? ""
+        let keyPart = keyChar.isEmpty ? "Key\(event.keyCode)" : keyChar
+        return symbols + keyPart
+    }
+
+    @objc private func showShortcutRecorder() {
+        if let window = shortcutRecorderWindow {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
             return
         }
 
-        batteryArmDeadline = nil
-        toggleMode()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 150),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "ショートカットを変更"
+        window.level = .floating
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.moveToActiveSpace]
+
+        let messageLabel = NSTextField(wrappingLabelWithString:
+            "新しいショートカットを押してください(⌘ / ⌃ / ⌥ のいずれかを含む)。Escでキャンセル"
+        )
+        messageLabel.alignment = .center
+        messageLabel.font = .systemFont(ofSize: 13)
+
+        let resetButton = NSButton(
+            title: "既定(⌃⌥A)に戻す",
+            target: self,
+            action: #selector(resetShortcutToDefault)
+        )
+        resetButton.bezelStyle = .rounded
+
+        let stack = NSStackView(views: [messageLabel, resetButton])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let contentView = NSView()
+        contentView.addSubview(stack)
+        window.contentView = contentView
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
+            stack.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            messageLabel.widthAnchor.constraint(equalTo: stack.widthAnchor)
+        ])
+
+        window.center()
+        shortcutRecorderWindow = window
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(shortcutRecorderWindowWillClose),
+            name: NSWindow.willCloseNotification,
+            object: window
+        )
+
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+
+        shortcutRecorderMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === window else { return event }
+
+            if event.keyCode == UInt16(kVK_Escape) {
+                self.closeShortcutRecorder()
+                return nil
+            }
+
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let hasQualifyingModifier = flags.contains(.command) || flags.contains(.control) || flags.contains(.option)
+            guard hasQualifyingModifier else { return nil }
+
+            let modifiers = self.carbonModifiers(from: flags)
+            let label = self.shortcutDisplayLabel(for: event, flags: flags)
+            self.applyShortcut(keyCode: UInt32(event.keyCode), modifiers: modifiers, label: label)
+            self.closeShortcutRecorder()
+            return nil
+        }
+    }
+
+    @objc private func resetShortcutToDefault() {
+        applyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥A")
+        closeShortcutRecorder()
+    }
+
+    private func closeShortcutRecorder() {
+        shortcutRecorderWindow?.close()
+    }
+
+    @objc private func shortcutRecorderWindowWillClose(_ notification: Notification) {
+        if let monitor = shortcutRecorderMonitor {
+            NSEvent.removeMonitor(monitor)
+            shortcutRecorderMonitor = nil
+        }
+        if let window = notification.object as? NSWindow {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
+        }
+        shortcutRecorderWindow = nil
+    }
+
+    // ショートカット経由の電池ONは、ダイアログではなく「二度押し」で確認する。
+    // ショートカットは押すたびに即切り替える。確認ダイアログは使わず、
+    // 結果は毎回、埋もれないHUDパネルで知らせる(ON/OFFどちらも)。
+    private func handleGlobalHotKey() {
+        refreshState()
+        let enabling = currentState.mode == .off
+        performToggle(enabling: enabling, viaHotKey: true)
+
+        guard currentState.mode == (enabling ? ShellMode.on : ShellMode.off) else { return }
+        if enabling {
+            hud.show(
+                currentState.onACPower
+                    ? "ONにしました。フタを閉じてもスリープしません"
+                    : "ONにしました。バッテリー駆動中 — 発熱と電池残量に注意",
+                for: 2.5
+            )
+        } else {
+            hud.show("OFFにしました。いつものスリープに戻ります", for: 2)
+        }
     }
 
     @objc private func showControlWindow() {
@@ -265,20 +454,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         performToggle(enabling: enabling)
     }
 
-    private func performToggle(enabling: Bool) {
+    private func performToggle(enabling: Bool, viaHotKey: Bool = false) {
         do {
             try PowerController.setSleepDisabled(enabling)
             refreshState()
 
             let expectedMode: ShellMode = enabling ? .on : .off
             guard currentState.mode == expectedMode else {
-                showAlert(title: "切り替えを確認できません", message: "設定状態を確認して、もう一度お試しください。")
+                if viaHotKey {
+                    hud.show("切り替えを確認できませんでした。メニューバーから状態を確認してください", for: 4)
+                } else {
+                    showAlert(title: "切り替えを確認できません", message: "設定状態を確認して、もう一度お試しください。")
+                }
                 return
             }
         } catch ControllerError.cancelled {
             refreshState()
         } catch {
-            showAlert(title: "切り替えに失敗しました", message: error.localizedDescription)
+            if viaHotKey {
+                hud.show("切り替えに失敗しました: \(error.localizedDescription)", for: 4)
+            } else {
+                showAlert(title: "切り替えに失敗しました", message: error.localizedDescription)
+            }
             refreshState()
         }
     }
