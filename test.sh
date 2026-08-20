@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.5.0"*) ;;
+  *"1.5.1"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1

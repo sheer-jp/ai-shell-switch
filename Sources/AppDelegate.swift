@@ -13,7 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
     private let toggleItem = NSMenuItem(title: "切り替え", action: #selector(toggleMode), keyEquivalent: "")
-    private let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
+    private let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥⌘A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
     private let changeShortcutItem = NSMenuItem(
         title: "ショートカットを変更…",
         action: #selector(showShortcutRecorder),
@@ -189,11 +189,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func storedShortcutModifiers() -> UInt32 {
         let stored = UserDefaults.standard.object(forKey: ShortcutDefaultsKey.modifiers) as? Int
-        return UInt32(stored ?? Int(controlKey | optionKey))
+        return UInt32(stored ?? Int(controlKey | optionKey | cmdKey))
     }
 
     private func shortcutLabel() -> String {
-        UserDefaults.standard.string(forKey: ShortcutDefaultsKey.label) ?? "⌃⌥A"
+        UserDefaults.standard.string(forKey: ShortcutDefaultsKey.label) ?? "⌃⌥⌘A"
     }
 
     private func refreshShortcutLabels() {
@@ -276,7 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         messageLabel.font = .systemFont(ofSize: 13)
 
         let resetButton = NSButton(
-            title: "既定(⌃⌥A)に戻す",
+            title: "既定(⌃⌥⌘A)に戻す",
             target: self,
             action: #selector(resetShortcutToDefault)
         )
@@ -331,7 +331,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resetShortcutToDefault() {
-        applyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥A")
+        applyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey | cmdKey), label: "⌃⌥⌘A")
         closeShortcutRecorder()
     }
 
