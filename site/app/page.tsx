@@ -64,6 +64,7 @@ export default function Home() {
           <p className="hero-keys">
             <span className="keycap">⌃</span>
             <span className="keycap">⌥</span>
+            <span className="keycap">⌘</span>
             <span className="keycap">A</span>
             <span className="keys-note">キーひとつで、ONもOFFも。</span>
           </p>
@@ -98,7 +99,7 @@ export default function Home() {
                   <span className="mac-btn">AI稼働モードにする(ON)</span>
                   <span className="mac-btn">状態を更新</span>
                 </div>
-                <p className="win-foot">⌃⌥A: ONとOFFを切り替え</p>
+                <p className="win-foot">⌃⌥⌘A: ONとOFFを切り替え</p>
               </div>
             </div>
             <figcaption>
@@ -141,6 +142,7 @@ export default function Home() {
           <div className="key-row">
             <span className="keycap">⌃</span>
             <span className="keycap">⌥</span>
+            <span className="keycap">⌘</span>
             <span className="keycap">A</span>
             <span className="key-desc">
               どの画面にいても、押すたびにONとOFFが切り替わり、結果がいま見ている画面の上部に表示されます。キーの組み合わせは変更できます。
