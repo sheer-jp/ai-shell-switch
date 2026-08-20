@@ -27,13 +27,13 @@ trap cleanup EXIT
 /usr/bin/ditto "$SOURCE_APP" "$STAGING_APP"
 /usr/bin/codesign --verify --deep --strict "$STAGING_APP"
 
-/usr/bin/pkill -f -x "$INSTALLED_EXECUTABLE" >/dev/null 2>&1 || true
+/usr/bin/pkill -f "$INSTALLED_EXECUTABLE" >/dev/null 2>&1 || true
 attempt=0
-while /usr/bin/pgrep -f -x "$INSTALLED_EXECUTABLE" >/dev/null 2>&1 && [ "$attempt" -lt 20 ]; do
+while /usr/bin/pgrep -f "$INSTALLED_EXECUTABLE" >/dev/null 2>&1 && [ "$attempt" -lt 20 ]; do
   /bin/sleep 0.1
   attempt=$((attempt + 1))
 done
-if /usr/bin/pgrep -f -x "$INSTALLED_EXECUTABLE" >/dev/null 2>&1; then
+if /usr/bin/pgrep -f "$INSTALLED_EXECUTABLE" >/dev/null 2>&1; then
   printf '既存の%sを終了できませんでした。メニューから終了して再実行してください。\n' "$APP_NAME" >&2
   exit 1
 fi
