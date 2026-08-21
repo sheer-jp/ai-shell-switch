@@ -62,11 +62,7 @@ export default function Home() {
             </a>
           </div>
           <p className="hero-keys">
-            <span className="keycap">⌃</span>
-            <span className="keycap">⌥</span>
-            <span className="keycap">⌘</span>
-            <span className="keycap">A</span>
-            <span className="keys-note">キーひとつで、ONもOFFも。</span>
+            <span className="keys-note">ショートカットひとつで、ONもOFFも。</span>
           </p>
           <p className="build-note">
             {"配布しているのはソースコードです。取得して、自分のMacでビルドして使います("}
@@ -89,6 +85,7 @@ export default function Home() {
                     <strong>AI Shell Switch</strong>
                     <span>蓋を閉じている間のAI稼働を、安全に切り替えます</span>
                   </div>
+                  <span className="win-gear">⚙</span>
                 </div>
                 <p className="win-status">AI OFF</p>
                 <p className="win-detail">
@@ -137,17 +134,8 @@ export default function Home() {
             {"を使えば、Macのスリープはもともと止められます。ただ、こわいのは止めたまま戻し忘れたとき。発熱やバッテリーの消耗が静かに進みます。"}
           </p>
           <p>
-            {"だから AI Shell Switch は、止める機能ではなく「切り替えやすさ」を中心に作っています。いちばん速いのはショートカットです。"}
+            {"だから AI Shell Switch は、止める機能ではなく「切り替えやすさ」を中心に作っています。いちばん速いのはショートカット。どの画面にいても押すたびにONとOFFが切り替わり、結果がいま見ている画面の上部に表示されます。キーの組み合わせは、好きなものに変更できます。"}
           </p>
-          <div className="key-row">
-            <span className="keycap">⌃</span>
-            <span className="keycap">⌥</span>
-            <span className="keycap">⌘</span>
-            <span className="keycap">A</span>
-            <span className="key-desc">
-              どの画面にいても、押すたびにONとOFFが切り替わり、結果がいま見ている画面の上部に表示されます。キーの組み合わせは変更できます。
-            </span>
-          </div>
           <p>
             {"ターミナル派には "}
             <code>ai-on</code> と <code>ai-off</code>
