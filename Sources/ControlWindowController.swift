@@ -21,7 +21,7 @@ final class ControlWindowController: NSObject {
         action: #selector(restoreStatusItemPressed)
     )
     private let footerLabel = NSTextField(
-        labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌃⌥⌘A: ON/OFF切り替え"
+        labelWithString: "上のアイコンが見えない時はDockのアプリアイコンから開けます · ⌥⌘X: ON/OFF切り替え"
     )
     private lazy var window = makeWindow()
 
