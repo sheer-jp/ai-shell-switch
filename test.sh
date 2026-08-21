@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.6.1"*) ;;
+  *"1.6.2"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -204,7 +204,10 @@ for contract_text in \
   "OFFにしました。いつものスリープに戻ります" \
   "viaHotKey" \
   "GlobalShortcutKeyCode" \
-  "addLocalMonitorForEvents" \
+  "ShortcutCaptureView" \
+  "performKeyEquivalent" \
+  "configureMainMenu" \
+  "入力待ち…" \
   "handleGlobalHotKey" \
   "NOPASSWD:" \
   "/usr/bin/pmset -a disablesleep 0" \
