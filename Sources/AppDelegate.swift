@@ -14,17 +14,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
     private let toggleItem = NSMenuItem(title: "切り替え", action: #selector(toggleMode), keyEquivalent: "")
     private let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥⌘A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
-    private let changeShortcutItem = NSMenuItem(
-        title: "ショートカットを変更…",
-        action: #selector(showShortcutRecorder),
-        keyEquivalent: ""
-    )
-    private let privilegeItem = NSMenuItem(title: "パスワード省略を設定…", action: #selector(togglePrivilegeMode), keyEquivalent: "")
-    private let loginItem = NSMenuItem(title: "ログイン時にも起動", action: #selector(toggleLoginItem), keyEquivalent: "")
+    private let settingsItem = NSMenuItem(title: "設定…", action: #selector(showSettingsWindow), keyEquivalent: ",")
     private lazy var controlWindowController = ControlWindowController(
         toggleAction: { [weak self] in self?.toggleMode() },
         refreshAction: { [weak self] in self?.refreshState() },
-        restoreStatusItemAction: { [weak self] in self?.rebuildStatusItem() }
+        restoreStatusItemAction: { [weak self] in self?.rebuildStatusItem() },
+        settingsAction: { [weak self] in self?.showSettingsWindow() }
+    )
+    private lazy var settingsWindowController = SettingsWindowController(
+        currentShortcutLabel: { [weak self] in self?.shortcutLabel() ?? "⌃⌥⌘A" },
+        changeShortcutAction: { [weak self] in self?.showShortcutRecorder() },
+        resetShortcutAction: { [weak self] in self?.resetShortcutToDefault() },
+        isLoginItemEnabled: { LaunchAgentManager.isEnabled },
+        toggleLoginItemAction: { [weak self] in self?.toggleLoginItem() },
+        isPrivilegeInstalled: { PrivilegedToggleManager.isInstalled },
+        togglePrivilegeAction: { [weak self] in self?.togglePrivilegeMode() }
     )
     private var timer: Timer?
     private var globalHotKey: GlobalHotKey?
@@ -71,9 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func configureMenu() {
         openControlItem.target = self
         toggleItem.target = self
-        changeShortcutItem.target = self
-        privilegeItem.target = self
-        loginItem.target = self
+        settingsItem.target = self
         menu.addItem(openControlItem)
         menu.addItem(.separator())
         menu.addItem(stateItem)
@@ -82,14 +84,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         shortcutItem.isEnabled = false
         menu.addItem(shortcutItem)
-        menu.addItem(changeShortcutItem)
-        menu.addItem(privilegeItem)
 
         let refreshItem = NSMenuItem(title: "状態を更新", action: #selector(refreshFromMenu), keyEquivalent: "r")
         refreshItem.target = self
         menu.addItem(refreshItem)
         menu.addItem(.separator())
-        menu.addItem(loginItem)
+        menu.addItem(settingsItem)
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(title: "終了", action: #selector(quit), keyEquivalent: "q")
@@ -200,6 +200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let label = shortcutLabel()
         shortcutItem.title = "ショートカット: \(label)（ONとOFFを切り替え）"
         controlWindowController.updateShortcutLabel(label)
+        settingsWindowController.updateShortcutLabel(label)
     }
 
     // 押されたキーの組み合わせから、次回起動時にも復元できるよう
@@ -376,6 +377,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controlWindowController.show()
     }
 
+    @objc private func showSettingsWindow() {
+        settingsWindowController.show()
+    }
+
     @objc private func refreshFromMenu() {
         refreshState()
     }
@@ -512,9 +517,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshPrivilegeItem() {
-        privilegeItem.title = PrivilegedToggleManager.isInstalled
-            ? "パスワード省略: 設定済み（解除…）"
-            : "パスワード省略を設定…"
+        settingsWindowController.refreshPrivilegeState()
     }
 
     @objc private func toggleLoginItem() {
@@ -539,7 +542,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshLoginItem() {
-        loginItem.state = LaunchAgentManager.isEnabled ? .on : .off
+        settingsWindowController.refreshLoginItemState()
     }
 
     private func showAlert(title: String, message: String) {
