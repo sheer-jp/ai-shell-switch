@@ -13,7 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
     private let stateItem = NSMenuItem(title: "状態を確認中…", action: nil, keyEquivalent: "")
     private let toggleItem = NSMenuItem(title: "切り替え", action: #selector(toggleMode), keyEquivalent: "")
-    private let shortcutItem = NSMenuItem(title: "ショートカット: ⌃⌥⌘A（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
+    private let shortcutItem = NSMenuItem(title: "ショートカット: ⌥⌘X（ONとOFFを切り替え）", action: nil, keyEquivalent: "")
     private let settingsItem = NSMenuItem(title: "設定…", action: #selector(showSettingsWindow), keyEquivalent: ",")
     private lazy var controlWindowController = ControlWindowController(
         toggleAction: { [weak self] in self?.toggleMode() },
@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsAction: { [weak self] in self?.showSettingsWindow() }
     )
     private lazy var settingsWindowController = SettingsWindowController(
-        currentShortcutLabel: { [weak self] in self?.shortcutLabel() ?? "⌃⌥⌘A" },
+        currentShortcutLabel: { [weak self] in self?.shortcutLabel() ?? "⌥⌘X" },
         changeShortcutAction: { [weak self] in self?.showShortcutRecorder() },
         resetShortcutAction: { [weak self] in self?.resetShortcutToDefault() },
         isLoginItemEnabled: { LaunchAgentManager.isEnabled },
@@ -252,11 +252,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func storedShortcutModifiers() -> UInt32 {
         let stored = UserDefaults.standard.object(forKey: ShortcutDefaultsKey.modifiers) as? Int
-        return UInt32(stored ?? Int(controlKey | optionKey | cmdKey))
+        return UInt32(stored ?? Int(optionKey | cmdKey))
     }
 
     private func shortcutLabel() -> String {
-        UserDefaults.standard.string(forKey: ShortcutDefaultsKey.label) ?? "⌃⌥⌘A"
+        UserDefaults.standard.string(forKey: ShortcutDefaultsKey.label) ?? "⌥⌘X"
     }
 
     private func refreshShortcutLabels() {
@@ -344,7 +344,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         feedbackLabel.textColor = .secondaryLabelColor
 
         let resetButton = NSButton(
-            title: "既定(⌃⌥⌘A)に戻す",
+            title: "既定(⌥⌘X)に戻す",
             target: self,
             action: #selector(resetShortcutToDefault)
         )
@@ -411,7 +411,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resetShortcutToDefault() {
-        applyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey | cmdKey), label: "⌃⌥⌘A")
+        applyShortcut(keyCode: UInt32(kVK_ANSI_X), modifiers: UInt32(optionKey | cmdKey), label: "⌥⌘X")
         closeShortcutRecorder()
     }
 
