@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var shortcutRecorderWindow: NSWindow?
     private var shortcutRecorderMonitor: Any?
     private var statusItemRebuildWorkItem: DispatchWorkItem?
+    private var dockFallbackActive = false
     private var statusItemVisibilityWorkItem: DispatchWorkItem?
     private var currentState = PowerState(mode: .off, onACPower: false)
 
@@ -51,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             self?.refreshState()
+            self?.reassessStatusItemPlacement()
         }
     }
 
@@ -151,6 +153,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func enableDockFallbackIfStatusItemIsObscured() {
         guard !statusItemIsInsideSafeMenuBarArea() else { return }
         NSApp.setActivationPolicy(.regular)
+        if !dockFallbackActive {
+            dockFallbackActive = true
+            hud.show("メニューバーに空きがないため、Dockにアイコンを出しました", for: 4)
+        }
+    }
+
+    // メニューバーの空き状況は変わるので、定期的に置き場所を見直す。
+    // 空きが戻ったらメニューバーへ復帰する。操作中(アプリがアクティブ)の
+    // 切り替えは避け、静かなタイミングだけで行う。
+    private func reassessStatusItemPlacement() {
+        if statusItemIsInsideSafeMenuBarArea() {
+            guard dockFallbackActive, !NSApp.isActive else { return }
+            dockFallbackActive = false
+            NSApp.setActivationPolicy(.accessory)
+            hud.show("メニューバーにアイコンが戻りました", for: 2.5)
+        } else {
+            enableDockFallbackIfStatusItemIsObscured()
+        }
     }
 
     private func statusItemIsInsideSafeMenuBarArea() -> Bool {
