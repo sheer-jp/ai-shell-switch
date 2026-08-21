@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.6.0"*) ;;
+  *"1.6.1"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -211,7 +211,9 @@ for contract_text in \
   "/usr/bin/pmset -a disablesleep 1" \
   "SettingsWindowController" \
   "設定…" \
-  "gearshape"; do
+  "gearshape" \
+  "Dockにアイコンを出しました" \
+  "reassessStatusItemPlacement"; do
   if ! /usr/bin/grep -q "$contract_text" "${SOURCE_FILES[@]}"; then
     printf 'menu contract missing: %s\n' "$contract_text" >&2
     exit 1
