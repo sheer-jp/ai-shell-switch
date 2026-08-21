@@ -34,7 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var globalHotKey: GlobalHotKey?
     private let hud = HudPanel()
     private var shortcutRecorderWindow: NSWindow?
-    private var shortcutRecorderMonitor: Any?
     private var statusItemRebuildWorkItem: DispatchWorkItem?
     private var dockFallbackActive = false
     private var statusItemVisibilityWorkItem: DispatchWorkItem?
@@ -42,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        configureMainMenu()
         configureMenu()
         observeDisplayChanges()
         configureGlobalHotKey()
@@ -66,12 +66,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         timer?.invalidate()
         statusItemRebuildWorkItem?.cancel()
         statusItemVisibilityWorkItem?.cancel()
-        if let monitor = shortcutRecorderMonitor {
-            NSEvent.removeMonitor(monitor)
-            shortcutRecorderMonitor = nil
-        }
         NotificationCenter.default.removeObserver(self)
         globalHotKey = nil
+    }
+
+    // Dockフォールバックで通常アプリとして前面に出たとき、左上のメニューバーが
+    // 空にならないよう、標準的なメインメニューを持たせる。
+    private func configureMainMenu() {
+        let mainMenu = NSMenu()
+
+        let appMenuItem = NSMenuItem()
+        let appMenu = NSMenu()
+        appMenu.addItem(
+            withTitle: "AI Shell Switchについて",
+            action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
+            keyEquivalent: ""
+        )
+        appMenu.addItem(.separator())
+        let settingsMain = appMenu.addItem(withTitle: "設定…", action: #selector(showSettingsWindow), keyEquivalent: ",")
+        settingsMain.target = self
+        appMenu.addItem(.separator())
+        appMenu.addItem(
+            withTitle: "AI Shell Switchを終了",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        appMenuItem.submenu = appMenu
+        mainMenu.addItem(appMenuItem)
+
+        let controlMenuItem = NSMenuItem()
+        let controlMenu = NSMenu(title: "操作")
+        let openMain = controlMenu.addItem(withTitle: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
+        openMain.target = self
+        let toggleMain = controlMenu.addItem(withTitle: "ONとOFFを切り替える", action: #selector(toggleMode), keyEquivalent: "t")
+        toggleMain.target = self
+        let refreshMain = controlMenu.addItem(withTitle: "状態を更新", action: #selector(refreshFromMenu), keyEquivalent: "r")
+        refreshMain.target = self
+        controlMenuItem.submenu = controlMenu
+        mainMenu.addItem(controlMenuItem)
+
+        let editMenuItem = NSMenuItem()
+        let editMenu = NSMenu(title: "編集")
+        editMenu.addItem(withTitle: "カット", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "コピー", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "ペースト", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "すべてを選択", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editMenuItem.submenu = editMenu
+        mainMenu.addItem(editMenuItem)
+
+        NSApp.mainMenu = mainMenu
     }
 
     private func configureMenu() {
@@ -227,7 +270,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Carbonの登録形式(keyCode/modifiers)とメニュー表示用ラベルを保存する。
     // 登録に失敗した場合はUserDefaultsを書き換えず、直前の組み合わせのまま
     // ホットキーを登録し直す。
-    private func applyShortcut(keyCode: UInt32, modifiers: UInt32, label: String) {
+    @discardableResult
+    private func applyShortcut(keyCode: UInt32, modifiers: UInt32, label: String) -> Bool {
         let previousKeyCode = storedShortcutKeyCode()
         let previousModifiers = storedShortcutModifiers()
 
@@ -241,15 +285,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             defaults.set(Int(modifiers), forKey: ShortcutDefaultsKey.modifiers)
             defaults.set(label, forKey: ShortcutDefaultsKey.label)
             refreshShortcutLabels()
-        } else {
-            globalHotKey = GlobalHotKey(keyCode: previousKeyCode, modifiers: previousModifiers) { [weak self] in
-                self?.handleGlobalHotKey()
-            }
-            showAlert(
-                title: "ショートカットを登録できません",
-                message: "\(label) は他のアプリで使われている可能性があります。別の組み合わせを選んでください。"
-            )
+            return true
         }
+
+        globalHotKey = GlobalHotKey(keyCode: previousKeyCode, modifiers: previousModifiers) { [weak self] in
+            self?.handleGlobalHotKey()
+        }
+        return false
     }
 
     private func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
@@ -296,6 +338,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         messageLabel.alignment = .center
         messageLabel.font = .systemFont(ofSize: 13)
 
+        let feedbackLabel = NSTextField(labelWithString: "入力待ち…")
+        feedbackLabel.alignment = .center
+        feedbackLabel.font = .monospacedSystemFont(ofSize: 15, weight: .semibold)
+        feedbackLabel.textColor = .secondaryLabelColor
+
         let resetButton = NSButton(
             title: "既定(⌃⌥⌘A)に戻す",
             target: self,
@@ -303,21 +350,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         resetButton.bezelStyle = .rounded
 
-        let stack = NSStackView(views: [messageLabel, resetButton])
+        let stack = NSStackView(views: [messageLabel, feedbackLabel, resetButton])
         stack.orientation = .vertical
         stack.alignment = .centerX
-        stack.spacing = 16
+        stack.spacing = 14
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        let contentView = NSView()
-        contentView.addSubview(stack)
-        window.contentView = contentView
+        let captureView = ShortcutCaptureView()
+        captureView.addSubview(stack)
+        window.contentView = captureView
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            stack.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            stack.leadingAnchor.constraint(equalTo: captureView.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: captureView.trailingAnchor, constant: -24),
+            stack.centerYAnchor.constraint(equalTo: captureView.centerYAnchor),
             messageLabel.widthAnchor.constraint(equalTo: stack.widthAnchor)
         ])
+
+        captureView.onKeyEvent = { [weak self, weak window] event in
+            guard let self else { return }
+
+            if event.keyCode == UInt16(kVK_Escape) {
+                self.closeShortcutRecorder()
+                return
+            }
+
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let label = self.shortcutDisplayLabel(for: event, flags: flags)
+            let hasQualifyingModifier = flags.contains(.command) || flags.contains(.control) || flags.contains(.option)
+            guard hasQualifyingModifier else {
+                feedbackLabel.stringValue = "\(label) — ⌘ / ⌃ / ⌥ のいずれかを含めてください"
+                feedbackLabel.textColor = .systemOrange
+                return
+            }
+
+            feedbackLabel.stringValue = label
+            feedbackLabel.textColor = .labelColor
+            let modifiers = self.carbonModifiers(from: flags)
+            if self.applyShortcut(keyCode: UInt32(event.keyCode), modifiers: modifiers, label: label) {
+                self.hud.show("ショートカットを \(label) に変更しました", for: 2.5)
+                self.closeShortcutRecorder()
+            } else {
+                feedbackLabel.stringValue = "\(label) は登録できませんでした"
+                feedbackLabel.textColor = .systemOrange
+                window?.makeKeyAndOrderFront(nil)
+            }
+        }
 
         window.center()
         shortcutRecorderWindow = window
@@ -330,25 +407,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
-
-        shortcutRecorderMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, event.window === window else { return event }
-
-            if event.keyCode == UInt16(kVK_Escape) {
-                self.closeShortcutRecorder()
-                return nil
-            }
-
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let hasQualifyingModifier = flags.contains(.command) || flags.contains(.control) || flags.contains(.option)
-            guard hasQualifyingModifier else { return nil }
-
-            let modifiers = self.carbonModifiers(from: flags)
-            let label = self.shortcutDisplayLabel(for: event, flags: flags)
-            self.applyShortcut(keyCode: UInt32(event.keyCode), modifiers: modifiers, label: label)
-            self.closeShortcutRecorder()
-            return nil
-        }
+        window.makeFirstResponder(captureView)
     }
 
     @objc private func resetShortcutToDefault() {
@@ -361,10 +420,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func shortcutRecorderWindowWillClose(_ notification: Notification) {
-        if let monitor = shortcutRecorderMonitor {
-            NSEvent.removeMonitor(monitor)
-            shortcutRecorderMonitor = nil
-        }
         if let window = notification.object as? NSWindow {
             NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
         }
