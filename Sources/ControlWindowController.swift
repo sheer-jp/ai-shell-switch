@@ -4,6 +4,12 @@ final class ControlWindowController: NSObject {
     private let toggleAction: () -> Void
     private let refreshAction: () -> Void
     private let restoreStatusItemAction: () -> Void
+    private let settingsAction: () -> Void
+    private let settingsButton = NSButton(
+        image: NSImage(systemSymbolName: "gearshape", accessibilityDescription: "設定") ?? NSImage(),
+        target: nil,
+        action: #selector(settingsPressed)
+    )
     private let statusLabel = NSTextField(labelWithString: "状態を確認中…")
     private let detailLabel = NSTextField(wrappingLabelWithString: "")
     private let powerLabel = NSTextField(labelWithString: "")
@@ -22,15 +28,21 @@ final class ControlWindowController: NSObject {
     init(
         toggleAction: @escaping () -> Void,
         refreshAction: @escaping () -> Void,
-        restoreStatusItemAction: @escaping () -> Void
+        restoreStatusItemAction: @escaping () -> Void,
+        settingsAction: @escaping () -> Void
     ) {
         self.toggleAction = toggleAction
         self.refreshAction = refreshAction
         self.restoreStatusItemAction = restoreStatusItemAction
+        self.settingsAction = settingsAction
         super.init()
         toggleButton.target = self
         refreshButton.target = self
         restoreStatusItemButton.target = self
+        settingsButton.target = self
+        settingsButton.isBordered = false
+        settingsButton.setAccessibilityLabel("設定")
+        settingsButton.toolTip = "設定"
     }
 
     func show() {
@@ -76,6 +88,10 @@ final class ControlWindowController: NSObject {
         restoreStatusItemAction()
     }
 
+    @objc private func settingsPressed() {
+        settingsAction()
+    }
+
     private func makeWindow() -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 440, height: 360),
@@ -109,9 +125,14 @@ final class ControlWindowController: NSObject {
         headingStack.alignment = .leading
         headingStack.spacing = 4
 
-        let headerStack = NSStackView(views: [iconView, headingStack])
+        headingStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        settingsButton.setContentHuggingPriority(.required, for: .horizontal)
+        settingsButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let headerStack = NSStackView(views: [iconView, headingStack, settingsButton])
         headerStack.orientation = .horizontal
         headerStack.alignment = .centerY
+        headerStack.distribution = .fill
         headerStack.spacing = 14
 
         statusLabel.font = .systemFont(ofSize: 19, weight: .semibold)
