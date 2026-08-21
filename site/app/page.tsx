@@ -30,7 +30,7 @@ export default function Home() {
       <main id="top">
         <section className="intro">
           <p className="labs-line">
-            Trust Driven System Labs の実験的プロダクトです。v1.5 ·
+            Trust Driven System Labs の実験的プロダクトです。v1.6 ·
             オープンソース(MIT)
           </p>
           <Image
@@ -96,7 +96,7 @@ export default function Home() {
                   <span className="mac-btn">AI稼働モードにする(ON)</span>
                   <span className="mac-btn">状態を更新</span>
                 </div>
-                <p className="win-foot">⌃⌥⌘A: ONとOFFを切り替え</p>
+                <p className="win-foot">⌥⌘X: ONとOFFを切り替え</p>
               </div>
             </div>
             <figcaption>
