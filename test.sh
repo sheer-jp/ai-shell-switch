@@ -41,7 +41,7 @@ done
 
 "$SHELLCHECK_BIN" "${scripts[@]}"
 "$SHFMT_BIN" -d -i 2 -ci "${scripts[@]}"
-/usr/bin/swiftc -typecheck -module-cache-path "$temp_dir/module-cache" -framework AppKit -framework Carbon "${SOURCE_FILES[@]}"
+/usr/bin/swiftc -typecheck -module-cache-path "$temp_dir/module-cache" -framework AppKit -framework Carbon -framework IOKit "${SOURCE_FILES[@]}"
 /usr/bin/plutil -lint "$ROOT/Info.plist" >/dev/null
 "$JQ_BIN" -e . "$ROOT/done-criteria.json" >/dev/null
 "$JQ_BIN" -e . "$ROOT/trust/tech-decision.json" "$ROOT/trust/roadmap.json" >/dev/null
@@ -166,7 +166,7 @@ esac
 
 version_output=$("$SWITCH" version)
 case "$version_output" in
-  *"1.6.4"*) ;;
+  *"1.7.0"*) ;;
   *)
     printf 'version output contract failed\n' >&2
     exit 1
@@ -215,7 +215,11 @@ for contract_text in \
   "SettingsWindowController" \
   "設定…" \
   "gearshape" \
-  "reassessStatusItemPlacement"; do
+  "reassessStatusItemPlacement" \
+  "IOPSNotificationCreateRunLoopSource" \
+  "didWakeNotification" \
+  "menuWillOpen" \
+  "tolerance = 15"; do
   if ! /usr/bin/grep -q "$contract_text" "${SOURCE_FILES[@]}"; then
     printf 'menu contract missing: %s\n' "$contract_text" >&2
     exit 1

@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import IOKit.ps
 
 private enum ShortcutDefaultsKey {
     static let keyCode = "GlobalShortcutKeyCode"
@@ -7,7 +8,7 @@ private enum ShortcutDefaultsKey {
     static let label = "GlobalShortcutLabel"
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let menu = NSMenu()
     private let openControlItem = NSMenuItem(title: "操作画面を開く…", action: #selector(showControlWindow), keyEquivalent: "o")
@@ -32,7 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
     private var timer: Timer?
     private var globalHotKey: GlobalHotKey?
-    private let hud = HudPanel()
+    private lazy var hud = HudPanel()
+    private var powerSourceRunLoopSource: CFRunLoopSource?
     private var shortcutRecorderWindow: NSWindow?
     private var statusItemRebuildWorkItem: DispatchWorkItem?
     private var dockFallbackActive = false
@@ -50,10 +52,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !CommandLine.arguments.contains("--background") {
             showControlWindow()
         }
-        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+        observePowerSourceChanges()
+        observeSystemWake()
+
+        // 常駐の負荷を抑えるため、定期確認は60秒の安全網だけにする。
+        // 電源の変化はIOKit通知、スリープ設定の変化は操作時・メニューを
+        // 開いた時・スリープ復帰時に即時反映される。
+        let safetyNet = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             self?.refreshState()
             self?.reassessStatusItemPlacement()
         }
+        safetyNet.tolerance = 15
+        timer = safetyNet
+    }
+
+    // AC⇔バッテリーの切り替わりはポーリングせず、IOKitの通知で受け取る。
+    private func observePowerSourceChanges() {
+        let callback: IOPowerSourceCallbackType = { context in
+            guard let context else { return }
+            let delegate = Unmanaged<AppDelegate>.fromOpaque(context).takeUnretainedValue()
+            delegate.refreshState()
+        }
+        guard let source = IOPSNotificationCreateRunLoopSource(
+            callback,
+            Unmanaged.passUnretained(self).toOpaque()
+        )?.takeRetainedValue() else { return }
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
+        powerSourceRunLoopSource = source
+    }
+
+    private func observeSystemWake() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func systemDidWake(_ notification: Notification) {
+        refreshState()
+    }
+
+    // メニューを開いた瞬間に最新化する(定期ポーリングを減らした分の補い)。
+    func menuWillOpen(_ menu: NSMenu) {
+        refreshState()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -66,6 +109,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         timer?.invalidate()
         statusItemRebuildWorkItem?.cancel()
         statusItemVisibilityWorkItem?.cancel()
+        if let source = powerSourceRunLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .defaultMode)
+            powerSourceRunLoopSource = nil
+        }
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
         NotificationCenter.default.removeObserver(self)
         globalHotKey = nil
     }
@@ -140,6 +188,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let quitItem = NSMenuItem(title: "終了", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+        menu.delegate = self
         installStatusItem()
         refreshPrivilegeItem()
         refreshLoginItem()

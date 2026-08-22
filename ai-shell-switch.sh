@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly APP_NAME="AI Shell Switch"
-readonly CLI_VERSION="1.6.4"
+readonly CLI_VERSION="1.7.0"
 readonly PMSET="${AI_SHELL_SWITCH_PMSET:-/usr/bin/pmset}"
 readonly SUDO="${AI_SHELL_SWITCH_SUDO:-/usr/bin/sudo}"
 readonly OSASCRIPT="${AI_SHELL_SWITCH_OSASCRIPT:-/usr/bin/osascript}"

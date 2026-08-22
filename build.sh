@@ -59,6 +59,7 @@ generate_icon_png 1024 icon_512x512@2x.png
   -module-cache-path "$MODULE_CACHE_DIR" \
   -framework AppKit \
   -framework Carbon \
+  -framework IOKit \
   -o "$MACOS_DIR/$APP_NAME" \
   "${SOURCE_FILES[@]}"
 /bin/cp -f "$ROOT/Info.plist" "$CONTENTS_DIR/Info.plist"
