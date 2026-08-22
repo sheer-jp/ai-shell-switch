@@ -2,12 +2,12 @@
   "requirements": {
     "AG-001": "The menu bar always shows AI ON or AI OFF while the app is running.",
     "AG-002": "A menu click switches between AI keep-awake mode and normal macOS sleep.",
-    "AG-003": "ON on battery requires explicit confirmation (app dialog, CLI prompt, or --force) and OFF restores SleepDisabled to 0.",
+    "AG-003": "ON on battery is never silent: the app and CLI require explicit confirmation (dialog / y-N prompt / --force) and the shortcut shows a visible battery warning; OFF restores SleepDisabled to 0.",
     "AG-004": "The user can enable launch at login without using Terminal.",
     "AG-005": "The public repository includes safe setup instructions and an MIT license.",
     "AG-006": "GitHub visibility is PUBLIC and origin/main matches the verified local commit.",
     "AG-007": "A one-time setup allows passwordless toggling using only two exact pmset commands.",
-    "AG-008": "Control+Option+A toggles between ON and OFF without Accessibility permission; enabling on battery still requires the confirmation dialog.",
+    "AG-008": "The global shortcut (default Option+Command+X, user-configurable) toggles between ON and OFF without Accessibility permission and reports each result on screen.",
     "AG-009": "Removing the rule restores the administrator-confirmation fallback.",
     "AG-010": "The normal installed surface contains only one AI Shell Switch app bundle.",
     "AG-011": "One installed CLI implements on, off, toggle, status, setup, unsetup, and doctor.",
@@ -21,7 +21,7 @@
   "success_criteria": [
     "The app builds and launches as a menu-bar-only macOS app.",
     "The displayed state is derived from the actual pmset SleepDisabled value.",
-    "ON requires explicit user confirmation on battery power plus administrator authorization; OFF restores normal sleep.",
+    "Enabling on battery is confirmed in the app and CLI and visibly warned on the shortcut; toggling requires administrator authorization and OFF restores normal sleep.",
     "Only two exact pmset commands are permitted by optional passwordless mode.",
     "ai-shell-switch and all documented short commands resolve to the bundled CLI.",
     "CLI transition tests use mocks and never mutate the host power state.",
@@ -32,7 +32,7 @@
   ],
   "failure_conditions": [
     "The menu display disagrees with pmset.",
-    "Battery operation can enable the mode without explicit user confirmation or --force.",
+    "Battery operation can enable the mode silently, with neither a confirmation nor a visible warning.",
     "SleepDisabled differs from its initial value after verification.",
     "The app appears in the Dock instead of only the menu bar.",
     "A normal build recreates a visible dist app duplicate.",
@@ -42,7 +42,7 @@
     "The icon source is missing, malformed, or not represented by AppIcon.icns in the app bundle.",
     "The app icon launches a process but leaves the user with no visible control window.",
     "Opening or reopening the control window changes SleepDisabled without an explicit toggle action.",
-    "The global shortcut can enable AI mode on battery without a visible confirmation.",
+    "The global shortcut can enable AI mode on battery without a visible warning.",
     "The landing page offers an unsigned prebuilt app as if it were Developer ID signed and notarized."
   ],
   "acceptance_checks": [
