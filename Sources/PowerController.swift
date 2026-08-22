@@ -1,4 +1,5 @@
 import AppKit
+import IOKit.ps
 
 enum ShellMode {
     case on
@@ -13,7 +14,6 @@ struct PowerState {
 enum PowerController {
     static func read() -> PowerState {
         let settings = run("/usr/bin/pmset", arguments: ["-g"])
-        let power = run("/usr/bin/pmset", arguments: ["-g", "ps"])
         let sleepDisabled = settings
             .split(separator: "\n")
             .contains { line in
@@ -23,8 +23,18 @@ enum PowerController {
 
         return PowerState(
             mode: sleepDisabled ? .on : .off,
-            onACPower: power.contains("AC Power")
+            onACPower: onACPower()
         )
+    }
+
+    // 電源種別はサブプロセス(pmset -g ps)ではなくIOKitを直接読む。
+    // 常駐アプリの定期確認でプロセスを生成しないため。
+    static func onACPower() -> Bool {
+        guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let typeRef = IOPSGetProvidingPowerSourceType(snapshot)?.takeUnretainedValue() else {
+            return false
+        }
+        return (typeRef as String) == kIOPMACPowerKey
     }
 
     static func setSleepDisabled(_ enabled: Bool) throws {
