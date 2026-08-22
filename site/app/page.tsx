@@ -30,7 +30,7 @@ export default function Home() {
       <main id="top">
         <section className="intro">
           <p className="labs-line">
-            Trust Driven System Labs の実験的プロダクトです。v1.6 ·
+            Trust Driven System Labs の実験的プロダクトです。v1.7 ·
             オープンソース(MIT)
           </p>
           <Image
