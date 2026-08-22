@@ -196,21 +196,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func enableDockFallbackIfStatusItemIsObscured() {
         guard !statusItemIsInsideSafeMenuBarArea() else { return }
         NSApp.setActivationPolicy(.regular)
-        if !dockFallbackActive {
-            dockFallbackActive = true
-            hud.show("メニューバーに空きがないため、Dockにアイコンを出しました", for: 4)
-        }
+        dockFallbackActive = true
     }
 
     // メニューバーの空き状況は変わるので、定期的に置き場所を見直す。
     // 空きが戻ったらメニューバーへ復帰する。操作中(アプリがアクティブ)の
-    // 切り替えは避け、静かなタイミングだけで行う。
+    // 切り替えは避ける。配置の変化は通知しない(オーナー判断: 邪魔)。
     private func reassessStatusItemPlacement() {
         if statusItemIsInsideSafeMenuBarArea() {
             guard dockFallbackActive, !NSApp.isActive else { return }
             dockFallbackActive = false
             NSApp.setActivationPolicy(.accessory)
-            hud.show("メニューバーにアイコンが戻りました", for: 2.5)
         } else {
             enableDockFallbackIfStatusItemIsObscured()
         }
